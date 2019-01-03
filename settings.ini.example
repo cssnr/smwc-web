@@ -1,0 +1,30 @@
+[django]
+debug           = True
+secret          = xxxxxxxx
+allowed_hosts   = *
+language_code   = en-us
+time_zone       = UTC
+static_root     = /var/www/html/static
+sqlite_db       = db.sqlite3
+
+[logging]
+app_level       = DEBUG
+app_handler     = console
+django_level    = INFO
+django_handler  = console
+log_file        = django.log
+
+[database]
+name            = database
+user            = database
+pass            = xxxxxxxx
+host            = mysql
+port            = 3306
+
+[oauth]
+client_id      = xxx
+client_secret  = xxx
+redirect_uri   = http://localhost/oauth/callback/
+response_type  = code
+grant_type     = authorization_code
+scope          = "identify webhook.incoming"

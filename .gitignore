@@ -1,0 +1,10 @@
+.idea/
+*.iml
+.coverage
+__pycache__/
+*.pyc
+venv/
+*.log
+setup.cfg
+settings.ini
+db.sqlite3

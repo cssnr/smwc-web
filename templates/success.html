@@ -1,0 +1,22 @@
+{% extends "main.html" %}
+{% block title %}Success{% endblock %}
+{% load home_tags %}
+
+{% block head %}{% endblock %}
+
+{% block body %}
+    <div class="row mt-2">
+        <div class="col">
+            <h1>SMW Central ROM Archive</h1>
+
+            <h3>Success</h3>
+
+            <p>Your webhook has been added! You should now see the webhook in your channel settings in Discord.</p>
+
+            <a href="{% url 'home:index' %}" class="btn btn-info btn-lg my-2" role="button">Go Back Home
+                <i class="fas fa-home"></i></a>
+            <a href="https://smwc.world/roms/" class="btn btn-success btn-lg my-2" role="button">View ROM Archive
+                <i class="fas fa-save"></i></a>
+        </div>
+    </div>
+{% endblock %}

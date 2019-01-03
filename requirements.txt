@@ -1,0 +1,8 @@
+django<3
+django-debug-toolbar
+django-extensions
+gunicorn
+mysqlclient
+Pillow
+requests
+Werkzeug
