@@ -16,3 +16,26 @@ class Webhooks(models.Model):
     class Meta:
         verbose_name = 'Webhooks'
         verbose_name_plural = 'Webhooks'
+
+
+class Hacks(models.Model):
+    name = models.CharField(max_length=255)
+    smwc_href = models.URLField(null=True, blank=True)
+    hack_url = models.URLField(null=True, blank=True)
+    download_url = models.URLField(null=True, blank=True)
+    archive_url = models.URLField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    difficulty = models.CharField(max_length=255, null=True, blank=True)
+    authors = models.CharField(max_length=255, null=True, blank=True)
+    length = models.CharField(max_length=255, null=True, blank=True)
+    smwc_id = models.CharField(max_length=255, null=True, blank=True)
+    demo = models.CharField(max_length=255, null=True, blank=True)
+    featured = models.CharField(max_length=255, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = 'Hacks'
+        verbose_name_plural = 'Hacks'

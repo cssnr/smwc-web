@@ -1,8 +1,11 @@
+celery
 django<3
 django-debug-toolbar
 django-extensions
+django_celery_beat
 gunicorn
 mysqlclient
 Pillow
+redis<3
 requests
 Werkzeug

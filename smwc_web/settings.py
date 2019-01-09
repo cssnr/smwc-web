@@ -38,6 +38,21 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
+# CELERY STUFF
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIMEZONE = CONFIG['django']['time_zone']
+
+CELERY_BEAT_SCHEDULE = {
+    'send-every-min': {
+        'task': 'test_task',
+        'schedule': 60.0,
+    },
+}
+
 if DEBUG:
     DEBUG_TOOLBAR_PANELS = [
         'debug_toolbar.panels.versions.VersionsPanel',
@@ -122,6 +137,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_extensions',
     'debug_toolbar',
+    'django_celery_beat',
     'oauth',
     'home',
 ]
