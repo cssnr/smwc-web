@@ -58,8 +58,8 @@ def callback(request):
         )
         webhook.save()
         success_message = ('Webhook successfully added. '
-                           'Everything is ready to go. '
-                           'Any new rom-hack will be show up here.')
+                           'New rom-hacks will show up here as they are posted. '
+                           'To browse the archive visit: {}').format(settings.APP_ROMS_URL)
         send_discord(oauth_response['webhook']['url'], success_message)
         logger.info(pformat(discord_profile))
         auth = login_user(request, discord_profile['username'])

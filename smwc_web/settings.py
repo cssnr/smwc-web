@@ -53,7 +53,7 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_TIMEZONE = CONFIG['django']['time_zone']
 CELERY_BEAT_SCHEDULE = {
     'every-ten-minutes': {
-        'task': 'test_task',
+        'task': 'process_hacks',
         'schedule': crontab('*/10'),
     },
 }
