@@ -185,4 +185,4 @@ class SmwCentral(object):
             with open(file_path, 'wb') as f:
                 f.write(r.content)
                 f.close()
-            hack.archive_url = '{}/{}'.format(settings.APP_ROMS_URL, file_uri)
+            hack.file_uri = file_uri
