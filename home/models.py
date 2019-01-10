@@ -4,9 +4,9 @@ from django.db import models
 class Webhooks(models.Model):
     owner_username = models.CharField(max_length=255)
     webhook_url = models.URLField(unique=True)
-    hook_id = models.IntegerField()
-    guild_id = models.IntegerField()
-    channel_id = models.IntegerField()
+    hook_id = models.CharField(max_length=255, blank=True, null=True)
+    guild_id = models.CharField(max_length=255, blank=True, null=True)
+    channel_id = models.CharField(max_length=255, blank=True, null=True)
     active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -29,12 +29,12 @@ class Hacks(models.Model):
     authors = models.CharField(max_length=255, null=True, blank=True)
     length = models.CharField(max_length=255, null=True, blank=True)
     smwc_id = models.CharField(max_length=255, null=True, blank=True)
-    demo = models.CharField(max_length=255, null=True, blank=True)
-    featured = models.CharField(max_length=255, null=True, blank=True)
+    demo = models.BooleanField(null=True, blank=True)
+    featured = models.BooleanField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.name
+        return '{}: {}'.format(self.name, self.smwc_id)
 
     class Meta:
         verbose_name = 'Hacks'

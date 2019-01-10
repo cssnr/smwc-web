@@ -1,5 +1,6 @@
 import ast
 import os
+from celery.schedules import crontab
 from configparser import ConfigParser
 from distutils.util import strtobool
 
@@ -11,13 +12,6 @@ WSGI_APPLICATION = 'smwc_web.wsgi.application'
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG = ConfigParser()
 CONFIG.read(os.path.join(BASE_DIR, settings_file))
-
-OAUTH_CLIENT_ID = CONFIG['oauth']['client_id']
-OAUTH_CLIENT_SECRET = CONFIG['oauth']['client_secret']
-OAUTH_REDIRECT_URI = CONFIG['oauth']['redirect_uri']
-OAUTH_RESPONSE_TYPE = CONFIG['oauth']['response_type']
-OAUTH_GRANT_TYPE = CONFIG['oauth']['grant_type']
-OAUTH_SCOPE = CONFIG['oauth']['scope'].strip('"')
 
 LOGIN_URL = '/oauth/'
 STATIC_URL = '/static/'
@@ -38,18 +32,29 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# CELERY STUFF
+APP_ROMS_DIR = CONFIG['app']['roms_dir']
+APP_SITE_URL = CONFIG['app']['site_url']
+APP_ROMS_URL = CONFIG['app']['roms_url']
+APP_SMWC_URL = CONFIG['app']['smwc_url']
+APP_MIN_HACK_ID = int(CONFIG['app']['min_hack_id'])
+
+OAUTH_CLIENT_ID = CONFIG['oauth']['client_id']
+OAUTH_CLIENT_SECRET = CONFIG['oauth']['client_secret']
+OAUTH_REDIRECT_URI = CONFIG['oauth']['redirect_uri']
+OAUTH_RESPONSE_TYPE = CONFIG['oauth']['response_type']
+OAUTH_GRANT_TYPE = CONFIG['oauth']['grant_type']
+OAUTH_SCOPE = CONFIG['oauth']['scope'].strip('"')
+
 CELERY_BROKER_URL = 'redis://localhost:6379'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_TIMEZONE = CONFIG['django']['time_zone']
-
 CELERY_BEAT_SCHEDULE = {
-    'send-every-min': {
+    'every-ten-minutes': {
         'task': 'test_task',
-        'schedule': 60.0,
+        'schedule': crontab('*/10'),
     },
 }
 
@@ -135,9 +140,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_celery_beat',
     'django_extensions',
     'debug_toolbar',
-    'django_celery_beat',
     'oauth',
     'home',
 ]
