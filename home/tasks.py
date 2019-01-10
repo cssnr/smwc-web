@@ -5,13 +5,15 @@ import os
 import re
 import requests
 import time
+import urllib3
 import urllib.parse as urlparse
 from django.conf import settings
 from bs4 import BeautifulSoup
 from celery import task
 from home.models import Hacks, Webhooks
 
-logger = logging.getLogger('app')
+logger = logging.getLogger('celery')
+urllib3.disable_warnings()
 
 
 @task(name='process_hacks')
