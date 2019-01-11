@@ -16,6 +16,17 @@ logger = logging.getLogger('celery')
 urllib3.disable_warnings()
 
 
+@task(name='send_discord_message')
+def send_discord_message(url, message):
+    try:
+        body = {'content': message}
+        r = requests.post(url, json=body, timeout=30)
+        return '{}: {}'.format(r.status_code, r.content.decode(r.encoding))
+    except Exception as error:
+        logger.exception(error)
+        raise
+
+
 @task(name='process_hacks')
 def process_hacks():
     logger.info('process_hacks: executed')
@@ -58,53 +69,11 @@ def process_hacks():
 
 
 class SmwCentral(object):
-    #  This needs to be its own task...
-    @classmethod
-    def send_alert(cls, hack):
-        message = 'New Hack: **{}**\nSMWC URL: {}'.format(hack.name, hack.get_hack_url())
-        if hack.get_archive_url():
-            message += '\nArchive URL: {}'.format(hack.get_archive_url())
-        if hack.difficulty:
-            message += '\nDifficulty: **{}**'.format(hack.difficulty)
-        if hack.length:
-            message += '\nLength: **{}**'.format(hack.length)
-        if hack.authors:
-            message += '\nAuthors: **{}**'.format(hack.authors)
-        if hack.demo:
-            message += '\n**This hack is a DEMO**'
-        if hack.featured:
-            message += '\n**This hack is a FEATURED**'
-        if hack.description:
-            max_desc = 1800 - len(message)
-            message += '\n```\n{}\n```'.format(hack.description[:max_desc])
-            logger.debug(message)
-        hooks = Webhooks.objects.all()
-        if not hooks:
-            logger.debug('No hooks found, nothing to do.')
-            return
-        for hook in hooks:
-            if not hook.active:
-                continue
-            logger.debug('Sending alert to: {}'.format(hook.owner_username))
-            r = cls._send_discord(hook.webhook_url, message)
-            logger.debug('Result: {}'.format(r.status_code))
-            logger.debug('-- hooks loop finished - sleep 5')
-            time.sleep(5)
-
-    @staticmethod
-    def _send_discord(url, message):
-        try:
-            body = {'content': message}
-            return requests.post(url, json=body, timeout=15)
-        except Exception as error:
-            logger.exception(error)
-            return False
-
     @staticmethod
     def get_waiting():
         new_hacks = 'https://www.smwcentral.net/?p=section&s=smwhacks&u=1'
         r = requests.get(new_hacks, timeout=30)
-        soup = BeautifulSoup(r.content.decode('iso-8859-1'), 'html.parser')
+        soup = BeautifulSoup(r.content.decode(r.encoding), 'html.parser')
         search_string = '/\?p=section&a=details&id='
         s = soup.findAll('a', attrs={'href': re.compile(search_string)})
         return s, r
@@ -138,7 +107,7 @@ class SmwCentral(object):
             r = requests.get(hack.get_hack_url(), verify=False, timeout=30)
             if r.status_code != 200:
                 raise Exception('Error retrieving smwc webpage: {}'.format(r.status_code))
-            soup = BeautifulSoup(r.content.decode('iso-8859-1'), 'html.parser')
+            soup = BeautifulSoup(r.content.decode(r.encoding), 'html.parser')
             download = soup.find(string='Download')
             hack.download_url = 'https:{}'.format(download.findPrevious()['href'])
 
@@ -188,3 +157,34 @@ class SmwCentral(object):
                 f.write(r.content)
                 f.close()
             hack.file_uri = file_uri
+
+    @staticmethod
+    def send_alert(hack):
+        message = 'New Hack: **{}**\nSMWC URL: {}'.format(hack.name, hack.get_hack_url())
+        if hack.get_archive_url():
+            message += '\nArchive URL: {}'.format(hack.get_archive_url())
+        if hack.difficulty:
+            message += '\nDifficulty: **{}**'.format(hack.difficulty)
+        if hack.length:
+            message += '\nLength: **{}**'.format(hack.length)
+        if hack.authors:
+            message += '\nAuthors: **{}**'.format(hack.authors)
+        if hack.demo:
+            message += '\n**This hack is a DEMO**'
+        if hack.featured:
+            message += '\n**This hack is a FEATURED**'
+        if hack.description:
+            max_desc = 1800 - len(message)
+            message += '\n```\n{}\n```'.format(hack.description[:max_desc])
+            logger.debug(message)
+        hooks = Webhooks.objects.all()
+        if not hooks:
+            logger.debug('No hooks found, nothing to do.')
+            return
+        for hook in hooks:
+            if not hook.active:
+                continue
+            logger.debug('Sending alert to: {}'.format(hook.owner_username))
+            send_discord_message.delay(hook.webhook_url, message)
+            logger.debug('-- hooks loop finished - sleep 5')
+            time.sleep(5)

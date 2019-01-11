@@ -111,9 +111,10 @@ LOGGING = {
     'handlers': {
         'file': {
             'level': 'DEBUG',
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': CONFIG['logging']['log_file'],
             'formatter': 'standard',
+            'maxBytes': 1024 * 1024 * 10,  # 100 mb
         },
         'console': {
             'class': 'logging.StreamHandler',
@@ -130,6 +131,12 @@ LOGGING = {
             'level': CONFIG['logging']['app_level'],
             'propagate': True,
         },
+        # 'celery': {
+        #     'handlers': [CONFIG['logging']['app_handler']],
+        #     'level': [CONFIG['logging']['app_handler']],
+        #     'filename': 'celery.log',
+        #     'formatter': 'simple',
+        # },
     },
 }
 
