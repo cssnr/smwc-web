@@ -9,11 +9,16 @@ def home_view(request):
     return render(request, 'home.html')
 
 
-def success_view(request):
-    # View: /success/
-    return render(request, 'success.html')
+def roms_view(request):
+    # View: /roms/
+    return render(request, 'roms.html')
 
 
 def error_view(request):
     # View: /error/
     return render(request, 'error.html')
+
+
+# def success_view(request):
+#     # View: /success/
+#     return render(request, 'success.html')

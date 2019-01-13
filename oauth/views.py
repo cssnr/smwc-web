@@ -62,12 +62,12 @@ def callback(request):
                            'To browse the archive visit: {}').format(settings.APP_ROMS_URL)
         send_discord(oauth_response['webhook']['url'], success_message)
         logger.info(pformat(discord_profile))
-        auth = login_user(request, discord_profile['username'])
-        if not auth:
-            message(request, 'danger', 'Fatal Auth Error. Report as Bug.')
-            return redirect('home:error')
+        # auth = login_user(request, discord_profile['username'])
+        # if not auth:
+        #     message(request, 'danger', 'Fatal Auth Error. Report as Bug.')
+        #     return redirect('home:error')
         message(request, 'success', 'Operation Successful!')
-        return redirect('home:success')
+        return redirect('home:index')
     except Exception as error:
         logger.exception(error)
         message(request, 'danger', 'Fatal Login Auth. Report as Bug.')
