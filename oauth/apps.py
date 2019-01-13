@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class HomeConfig(AppConfig):
+class OauthConfig(AppConfig):
     name = 'oauth'
     verbose_name = 'Oauth'

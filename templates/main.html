@@ -51,9 +51,14 @@
                             <li class="nav-item {% block home_active %}{% endblock %}">
                                 <a class="nav-link" href="{% url 'home:index' %}">Home</a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'home:roms' %}">ROM Archive</a>
+                            <li class="nav-item {% block roms_active %}{% endblock %}">
+                                <a class="nav-link" href="{% url 'home:roms' %}">ROM List</a>
                             </li>
+                            {% if request.user.is_superuser %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'flower' %}">Flower</a>
+                                </li>
+                            {% endif %}
                         </ul>
 
                         {% if request.user.is_authenticated %}
@@ -91,6 +96,18 @@
     {% endblock %}
 
     {% block body %}{% endblock %}
+
+    {% block footer %}
+        <div class="row">
+            <div class="col">
+                <hr>
+
+                <p>Report Abuse:
+                    <script type="text/javascript" src="{% static 'main/js/email-abuse.js' %}"></script>
+                </p>
+            </div>
+        </div>
+    {% endblock %}
 </div>
 
 {% if request.user.is_authenticated %}

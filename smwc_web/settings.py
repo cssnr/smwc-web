@@ -1,5 +1,6 @@
 import ast
 import os
+from celery.schedules import crontab
 from configparser import ConfigParser
 from distutils.util import strtobool
 
@@ -11,13 +12,6 @@ WSGI_APPLICATION = 'smwc_web.wsgi.application'
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG = ConfigParser()
 CONFIG.read(os.path.join(BASE_DIR, settings_file))
-
-OAUTH_CLIENT_ID = CONFIG['oauth']['client_id']
-OAUTH_CLIENT_SECRET = CONFIG['oauth']['client_secret']
-OAUTH_REDIRECT_URI = CONFIG['oauth']['redirect_uri']
-OAUTH_RESPONSE_TYPE = CONFIG['oauth']['response_type']
-OAUTH_GRANT_TYPE = CONFIG['oauth']['grant_type']
-OAUTH_SCOPE = CONFIG['oauth']['scope'].strip('"')
 
 LOGIN_URL = '/oauth/'
 STATIC_URL = '/static/'
@@ -38,6 +32,41 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
+APP_ROMS_DIR = CONFIG['app']['roms_dir']
+APP_SITE_URL = CONFIG['app']['site_url']
+APP_ROMS_URL = CONFIG['app']['roms_url']
+APP_SMWC_URL = CONFIG['app']['smwc_url']
+APP_MIN_HACK_ID = int(CONFIG['app']['min_hack_id'])
+
+OAUTH_CLIENT_ID = CONFIG['oauth']['client_id']
+OAUTH_CLIENT_SECRET = CONFIG['oauth']['client_secret']
+OAUTH_REDIRECT_URI = CONFIG['oauth']['redirect_uri']
+OAUTH_RESPONSE_TYPE = CONFIG['oauth']['response_type']
+OAUTH_GRANT_TYPE = CONFIG['oauth']['grant_type']
+OAUTH_SCOPE = CONFIG['oauth']['scope'].strip('"')
+
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIMEZONE = CONFIG['django']['time_zone']
+CELERY_BEAT_SCHEDULE = {
+    'every-ten-minutes': {
+        'task': 'process_hacks',
+        'schedule': crontab('*/10'),
+    },
+}
+
+STATSD_PREFIX = CONFIG.get('statsd', 'metric_prefix', fallback='smwcweb.dev')
+STATSD_PORT = CONFIG.getint('statsd', 'metric_port', fallback=8125)
+STATSD_HOST = CONFIG.get('statsd', 'metric_host', fallback='localhost')
+STATSD_CLIENT = CONFIG.get('statsd', 'metric_client', fallback='django_statsd.clients.toolbar')
+# STATSD_PATCHES = [
+#     'django_statsd.patches.db',
+#     'django_statsd.patches.cache',
+# ]
+
 if DEBUG:
     DEBUG_TOOLBAR_PANELS = [
         'debug_toolbar.panels.versions.VersionsPanel',
@@ -53,6 +82,9 @@ if DEBUG:
         'debug_toolbar.panels.logging.LoggingPanel',
         'debug_toolbar.panels.redirects.RedirectsPanel',
     ]
+
+    if 'django_statsd.clients.toolbar' in STATSD_CLIENT:
+        DEBUG_TOOLBAR_PANELS.append('django_statsd.panel.StatsdPanel')
 
     def show_toolbar(request):
         return True if request.user.is_staff else False
@@ -91,9 +123,10 @@ LOGGING = {
     'handlers': {
         'file': {
             'level': 'DEBUG',
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': CONFIG['logging']['log_file'],
             'formatter': 'standard',
+            'maxBytes': 1024 * 1024 * 10,  # 100 mb
         },
         'console': {
             'class': 'logging.StreamHandler',
@@ -110,6 +143,12 @@ LOGGING = {
             'level': CONFIG['logging']['app_level'],
             'propagate': True,
         },
+        # 'celery': {
+        #     'handlers': [CONFIG['logging']['app_handler']],
+        #     'level': [CONFIG['logging']['app_handler']],
+        #     'filename': 'celery.log',
+        #     'formatter': 'simple',
+        # },
     },
 }
 
@@ -120,7 +159,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_celery_beat',
     'django_extensions',
+    'django_statsd',
     'debug_toolbar',
     'oauth',
     'home',

@@ -3,16 +3,16 @@ import random
 import requests
 import string
 import urllib.parse
+from django_statsd.clients import statsd
 from django.contrib import messages
-from django.contrib.auth import login, logout
-from django.contrib.auth.models import User
-from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth import logout
 from django.shortcuts import redirect
 from django.shortcuts import HttpResponseRedirect
 from django.views.decorators.http import require_http_methods
 from django.conf import settings
 from pprint import pformat
 from home.models import Webhooks
+from home.tasks import send_discord_message
 
 logger = logging.getLogger('app')
 
@@ -33,6 +33,7 @@ def do_oauth(request):
     url_params = urllib.parse.urlencode(params)
     url = 'https://discordapp.com/api/oauth2/authorize?{}'.format(url_params)
     logger.debug('url: {}'.format(url))
+    statsd.incr('oauth.do_oauth.click')
     return HttpResponseRedirect(url)
 
 
@@ -43,12 +44,13 @@ def callback(request):
     try:
         oauth_state = request.GET['state']
         if oauth_state != request.session['state']:
-            logger.info('STATE DOES NOT MATCH: {}'.format(oauth_state))
+            logger.warning('STATE DOES NOT MATCH: {}'.format(oauth_state))
         oauth_code = request.GET['code']
         logger.info('oauth_code: {}'.format(oauth_code))
         oauth_response = oauth_token(oauth_code)
         logger.info(pformat(oauth_response))
         discord_profile = get_discord(oauth_response['access_token'])
+        logger.info(pformat(discord_profile))
         webhook = Webhooks(
             owner_username=discord_profile['username'],
             webhook_url=oauth_response['webhook']['url'],
@@ -58,20 +60,17 @@ def callback(request):
         )
         webhook.save()
         success_message = ('Webhook successfully added. '
-                           'Everything is ready to go. '
-                           'Any new rom-hack will be show up here.')
-        send_discord(oauth_response['webhook']['url'], success_message)
-        logger.info(pformat(discord_profile))
-        auth = login_user(request, discord_profile['username'])
-        if not auth:
-            message(request, 'danger', 'Fatal Auth Error. Report as Bug.')
-            return redirect('home:error')
+                           'New rom-hacks will show up here as they are posted. '
+                           'To browse the archive visit: {}').format(settings.APP_ROMS_URL)
+        send_discord_message.delay(oauth_response['webhook']['url'], success_message)
+        statsd.incr('oauth.callback.success.')
         message(request, 'success', 'Operation Successful!')
-        return redirect('home:success')
+        return redirect('home:index')
     except Exception as error:
+        statsd.incr('oauth.callback.errors.')
         logger.exception(error)
         message(request, 'danger', 'Fatal Login Auth. Report as Bug.')
-        return redirect('home:error')
+        return redirect('home:index')
 
 
 @require_http_methods(['POST'])
@@ -82,23 +81,6 @@ def log_out(request):
     logout(request)
     message(request, 'success', 'You have logged out.')
     return redirect('home:index')
-
-
-def login_user(request, username):
-    """
-    Login or Create New User
-    """
-    try:
-        user = User.objects.filter(username=username).get()
-        login(request, user)
-        return True
-    except ObjectDoesNotExist:
-        user = User.objects.create_user(username)
-        login(request, user)
-        return True
-    except Exception as error:
-        logger.exception(error)
-        return False
 
 
 def oauth_token(code):
@@ -115,6 +97,7 @@ def oauth_token(code):
         'scope': settings.OAUTH_SCOPE,
     }
     r = requests.post(url, data=data, timeout=10)
+    statsd.incr('oauth.oauth_token.status_codes.{}'.format(r.status_code))
     logger.debug('status_code: {}'.format(r.status_code))
     logger.debug('content: {}'.format(r.content))
     return r.json()
@@ -129,6 +112,7 @@ def get_discord(access_token):
         'Authorization': 'Bearer {}'.format(access_token),
     }
     r = requests.get(url, headers=headers, timeout=10)
+    statsd.incr('oauth.get_discord.status_codes.{}'.format(r.status_code))
     logger.debug('status_code: {}'.format(r.status_code))
     logger.debug('content: {}'.format(r.content))
     return r.json()
@@ -142,12 +126,3 @@ def message(request, level, message):
         messages.add_message(request, messages.SUCCESS, message, extra_tags='success')
     else:
         messages.add_message(request, messages.WARNING, message, extra_tags=level)
-
-
-def send_discord(url, message):
-    try:
-        body = {'content': message}
-        return requests.post(url, json=body, timeout=10)
-    except Exception as error:
-        logger.exception(error)
-        return False

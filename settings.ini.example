@@ -3,7 +3,7 @@ debug           = True
 secret          = xxxxxxxx
 allowed_hosts   = *
 language_code   = en-us
-time_zone       = UTC
+time_zone       = America/Los_Angeles
 static_root     = /var/www/html/static
 sqlite_db       = db.sqlite3
 
@@ -20,6 +20,19 @@ user            = database
 pass            = xxxxxxxx
 host            = mysql
 port            = 3306
+
+[app]
+roms_dir       = /data/roms
+site_url       = https://smwc.world
+roms_url       = https://roms.smwc.world
+smwc_url       = https://www.smwcentral.net
+min_hack_id    = 18000
+
+[statsd]
+metric_host     = graphite.cssnr.com
+metric_port     = 8125
+metric_prefix   = smwcweb.dev
+metric_client   = django_statsd.clients.toolbar
 
 [oauth]
 client_id      = xxx
