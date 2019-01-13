@@ -4,9 +4,11 @@ django<3
 django-debug-toolbar
 django-extensions
 django_celery_beat
+flower
 gunicorn
 mysqlclient
 Pillow
 redis<3
 requests
+tornado<5
 Werkzeug

@@ -3,7 +3,7 @@ debug           = True
 secret          = xxxxxxxx
 allowed_hosts   = *
 language_code   = en-us
-time_zone       = UTC
+time_zone       = America/Los_Angeles
 static_root     = /var/www/html/static
 sqlite_db       = db.sqlite3
 
@@ -28,3 +28,10 @@ redirect_uri   = http://localhost/oauth/callback/
 response_type  = code
 grant_type     = authorization_code
 scope          = "identify webhook.incoming"
+
+[app]
+roms_dir       = /data/roms
+site_url       = https://smwc.world
+roms_url       = https://roms.smwc.world
+smwc_url       = https://www.smwcentral.net
+min_hack_id    = 18000

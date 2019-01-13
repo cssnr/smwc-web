@@ -16,7 +16,7 @@ logger = logging.getLogger('celery')
 urllib3.disable_warnings()
 
 
-@task(name='send_discord_message')
+@task(name='send_discord_message', retry_kwargs={'max_retries': 5, 'countdown': 120})
 def send_discord_message(url, message):
     try:
         body = {'content': message}
