@@ -61,7 +61,7 @@ def callback(request):
         webhook.save()
         success_message = ('Webhook successfully added. '
                            'New rom-hacks will show up here as they are posted. '
-                           'To browse the archive visit: {}').format(settings.APP_ROMS_URL)
+                           'To browse the archive visit: {}').format(settings.APP_SITE_URL)
         send_discord_message.delay(oauth_response['webhook']['url'], success_message)
         statsd.incr('oauth.callback.success.')
         message(request, 'success', 'Operation Successful!')
