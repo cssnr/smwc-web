@@ -52,7 +52,7 @@
                                 <a class="nav-link" href="{% url 'home:index' %}">Home</a>
                             </li>
                             <li class="nav-item {% block roms_active %}{% endblock %}">
-                                <a class="nav-link" href="{% url 'home:roms' %}">ROM Archive</a>
+                                <a class="nav-link" href="{% url 'home:roms' %}">ROM List</a>
                             </li>
                             {% if request.user.is_superuser %}
                                 <li class="nav-item">

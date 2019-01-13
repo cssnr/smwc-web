@@ -87,8 +87,8 @@ def process_alert(hack_pk):
             continue
         logger.debug('Sending alert to: {}'.format(hook.owner_username))
         send_alert.delay(hook.id, message)
-        logger.debug('-- hooks loop finished - sleep 5')
-        time.sleep(5)
+        # logger.debug('-- hooks loop finished - sleep 5')
+        # time.sleep(5)
 
 
 @task(name='send_alert', retry_kwargs={'max_retries': 5, 'countdown': 120})
@@ -207,6 +207,7 @@ class SmwCentral(object):
             r = requests.get(hack.download_url, verify=False, timeout=30)
             statsd.incr('tasks.download_rom.status_codes.{}'.format(r.status_code))
             if r.status_code != 200:
+                logger.error(r.content.decode(r.encoding))
                 raise Exception('Error retrieving rom download archive: {}'.format(r.status_code))
             rom_file_name = os.path.basename(hack.download_url).replace('%20', '_')
             file_name = '{}-{}'.format(hack.smwc_id, rom_file_name)
