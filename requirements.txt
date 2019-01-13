@@ -1,14 +1,16 @@
 bs4
 celery
 django<3
+django-celery-beat
 django-debug-toolbar
 django-extensions
-django_celery_beat
+django-statsd-mozilla
 flower
 gunicorn
 mysqlclient
 Pillow
 redis<3
 requests
+statsd
 tornado<5
 Werkzeug

@@ -21,6 +21,19 @@ pass            = xxxxxxxx
 host            = mysql
 port            = 3306
 
+[app]
+roms_dir       = /data/roms
+site_url       = https://smwc.world
+roms_url       = https://roms.smwc.world
+smwc_url       = https://www.smwcentral.net
+min_hack_id    = 18000
+
+[statsd]
+metric_host     = graphite.cssnr.com
+metric_port     = 8125
+metric_prefix   = smwcweb.dev
+metric_client   = django_statsd.clients.toolbar
+
 [oauth]
 client_id      = xxx
 client_secret  = xxx
@@ -28,10 +41,3 @@ redirect_uri   = http://localhost/oauth/callback/
 response_type  = code
 grant_type     = authorization_code
 scope          = "identify webhook.incoming"
-
-[app]
-roms_dir       = /data/roms
-site_url       = https://smwc.world
-roms_url       = https://roms.smwc.world
-smwc_url       = https://www.smwcentral.net
-min_hack_id    = 18000

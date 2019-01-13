@@ -58,6 +58,15 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
+STATSD_PREFIX = CONFIG.get('statsd', 'metric_prefix', fallback='smwcweb.dev')
+STATSD_PORT = CONFIG.getint('statsd', 'metric_port', fallback=8125)
+STATSD_HOST = CONFIG.get('statsd', 'metric_host', fallback='localhost')
+STATSD_CLIENT = CONFIG.get('statsd', 'metric_client', fallback='django_statsd.clients.toolbar')
+# STATSD_PATCHES = [
+#     'django_statsd.patches.db',
+#     'django_statsd.patches.cache',
+# ]
+
 if DEBUG:
     DEBUG_TOOLBAR_PANELS = [
         'debug_toolbar.panels.versions.VersionsPanel',
@@ -73,6 +82,9 @@ if DEBUG:
         'debug_toolbar.panels.logging.LoggingPanel',
         'debug_toolbar.panels.redirects.RedirectsPanel',
     ]
+
+    if 'django_statsd.clients.toolbar' in STATSD_CLIENT:
+        DEBUG_TOOLBAR_PANELS.append('django_statsd.panel.StatsdPanel')
 
     def show_toolbar(request):
         return True if request.user.is_staff else False
@@ -149,6 +161,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_celery_beat',
     'django_extensions',
+    'django_statsd',
     'debug_toolbar',
     'oauth',
     'home',

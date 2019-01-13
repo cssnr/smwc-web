@@ -7,6 +7,7 @@ import requests
 import time
 import urllib3
 import urllib.parse as urlparse
+from django_statsd.clients import statsd
 from django.conf import settings
 from bs4 import BeautifulSoup
 from celery import task
@@ -42,6 +43,7 @@ def process_hacks():
             logger.debug('created: {}'.format(created))
             if created:
                 logger.info('New Hack: {} | {} | {}'.format(hack.smwc_id, hack.name, hack.get_hack_url()))
+                statsd.incr('tasks.process_hacks.created')
                 SmwCentral.update_hack_info(hack)
                 SmwCentral.download_rom(hack)
                 hack.save()
@@ -49,6 +51,7 @@ def process_hacks():
             else:
                 logger.debug('Hack Not Created: {}'.format(smwc_id))
         except Exception as error:
+            statsd.incr('tasks.process_hacks.errors')
             errors += 1
             logger.exception(error)
             continue
@@ -94,17 +97,37 @@ def send_alert(hook_pk, message):
         hook = Webhooks.objects.get(pk=hook_pk)
         body = {'content': message}
         r = requests.post(hook.webhook_url, json=body, timeout=30)
+        statsd.incr('tasks.send_alert.status_codes.{}'.format(r.status_code))
         if r.status_code == 404:
             logger.warning('Hook {} removed by owner {} - {}'.format(
                 hook.hook_id, hook.owner_username, hook.webhook_url))
             hook.delete()
+            statsd.incr('tasks.send_alert.hook_delete')
             return '404: Hook removed by owner and deleted from database.'
 
         if not r.ok:
+            logger.warning(r.content.decode(r.encoding))
             r.raise_for_status()
 
         return '{}: {}'.format(r.status_code, r.content.decode(r.encoding))
     except Exception as error:
+        statsd.incr('tasks.send_alert.errors')
+        logger.exception(error)
+        raise
+
+
+@task(name='send_discord_message', retry_kwargs={'max_retries': 3, 'countdown': 60})
+def send_discord_message(url, message):
+    try:
+        body = {'content': message}
+        r = requests.post(url, json=body, timeout=30)
+        statsd.incr('tasks.send_discord_message.status_codes.{}'.format(r.status_code))
+        if not r.ok:
+            logger.warning(r.content.decode(r.encoding))
+            r.raise_for_status()
+        return '{}: {}'.format(r.status_code, r.content.decode(r.encoding))
+    except Exception as error:
+        statsd.incr('tasks.send_discord_message.errors.')
         logger.exception(error)
         raise
 
@@ -114,6 +137,7 @@ class SmwCentral(object):
     def get_waiting():
         new_hacks = 'https://www.smwcentral.net/?p=section&s=smwhacks&u=1'
         r = requests.get(new_hacks, timeout=30)
+        statsd.incr('tasks.get_waiting.status_codes.{}'.format(r.status_code))
         soup = BeautifulSoup(r.content.decode(r.encoding), 'html.parser')
         search_string = '/\?p=section&a=details&id='
         s = soup.findAll('a', attrs={'href': re.compile(search_string)})
@@ -146,6 +170,7 @@ class SmwCentral(object):
         try:
             logger.info('rom_url: {}'.format(hack.get_hack_url()))
             r = requests.get(hack.get_hack_url(), verify=False, timeout=30)
+            statsd.incr('tasks.update_hack_info.status_codes.{}'.format(r.status_code))
             if r.status_code != 200:
                 raise Exception('Error retrieving smwc webpage: {}'.format(r.status_code))
             soup = BeautifulSoup(r.content.decode(r.encoding), 'html.parser')
@@ -180,6 +205,7 @@ class SmwCentral(object):
         if hack.download_url:
             logger.info('Downloading url: {}'.format(hack.download_url))
             r = requests.get(hack.download_url, verify=False, timeout=30)
+            statsd.incr('tasks.download_rom.status_codes.{}'.format(r.status_code))
             if r.status_code != 200:
                 raise Exception('Error retrieving rom download archive: {}'.format(r.status_code))
             rom_file_name = os.path.basename(hack.download_url).replace('%20', '_')
