@@ -1,0 +1,17 @@
+[Unit]
+Description=smwc-beat celery beat
+After=network.target
+
+[Service]
+User=apache
+Group=apache
+WorkingDirectory=/websites/smwc-web
+ExecStart=/websites/smwc-web/venv/bin/celery -A smwc_web beat -l INFO \
+    --scheduler django_celery_beat.schedulers:DatabaseScheduler \
+    --logfile /var/log/smwc-web/beat.log
+ExecReload=/bin/kill -s HUP
+ExecStop=/bin/kill -s TERM
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,22 @@
+[Unit]
+Description=smwc-flower celery flower
+After=network.target
+
+[Service]
+User=apache
+Group=apache
+WorkingDirectory=/websites/smwc-web
+ExecStart=/websites/smwc-web/venv/bin/flower -A smwc_web \
+    --address=127.0.0.1 --port=5555 --url_prefix=flower \
+    --auth_provider=flower.views.auth.GithubLoginHandler \
+    --auth=shane@cssnr.com|raluaces@gmail.com \
+    --oauth2-key=REDACTED \
+    --oauth2-secret=REDACTED \
+    --oauth2-redirect-uri=https://smwc.world/flower/login \
+    --logging=INFO --log-file-prefix=/var/log/smwc-web/flower.log
+ExecReload=/bin/kill -s HUP
+ExecStop=/bin/kill -s TERM
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
