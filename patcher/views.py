@@ -30,7 +30,7 @@ def show_patcher(request):
             # return response
 
             response = HttpResponse(patcher.patch_data, content_type='application/octet-stream')
-            response['Content-Disposition'] = "attachment; filename={0}".format('output.sfc')
+            response['Content-Disposition'] = "attachment; filename={0}".format(patcher.patch_name)
             response['Content-Length'] = sys.getsizeof(patcher.patch_data)
             return response
 

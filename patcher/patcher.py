@@ -68,11 +68,8 @@ class RomPatcher(object):
             archive.close()
             patch_file = self.find_first_file(self.tempdir, self.patch_pattern)
 
-        self.patch_name = re.split(self.patch_pattern, patch_file)[0]
-        print('patch_name: {}'.format(self.patch_name))
-        output_file = os.path.join(self.tempdir, '{}.sfc'.format(
-            os.path.basename(self.patch_name)
-        ))
+        self.patch_name = '{}.sfc'.format(os.path.basename(re.split(self.patch_pattern, patch_file)[0]))
+        output_file = os.path.join(self.tempdir, os.path.basename(self.patch_name))
 
         patch_command = [
             os.path.join(self.flips), '--apply', '--exact',
