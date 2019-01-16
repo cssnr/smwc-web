@@ -6,6 +6,7 @@ from django.views.generic.base import RedirectView
 
 urlpatterns = [
     path('', include('home.urls')),
+    path('patch/', include('patcher.urls')),
     path('oauth/', include('oauth.urls')),
     path('admin/', admin.site.urls),
     path('flower/', RedirectView.as_view(url='/flower/'), name='flower'),

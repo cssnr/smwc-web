@@ -54,6 +54,9 @@
                             <li class="nav-item {% block roms_active %}{% endblock %}">
                                 <a class="nav-link" href="{% url 'home:roms' %}">ROM List</a>
                             </li>
+                            <li class="nav-item {% block patcher_active %}{% endblock %}">
+                                <a class="nav-link" href="{% url 'patcher:index' %}">Online ROM Patcher</a>
+                            </li>
                         </ul>
 
                         {% if request.user.is_authenticated %}

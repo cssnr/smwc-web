@@ -1,0 +1,41 @@
+{% extends "main.html" %}
+{% block patcher_active %}active{% endblock %}
+{% block title %}ROM Patcher{% endblock %}
+{% load staticfiles %}
+{% load home_tags %}
+
+{% block head %}{% endblock %}
+
+{% block body %}
+    <div class="row mt-2">
+        <div class="col">
+            <h1>ROM Patcher</h1>
+
+            <ul>
+                <li>1. Select the Source Super Mario World unmodified ROM from your computer.</li>
+                <li>2. Choose a local or remote patch file or zip containing a patch file.
+                    You may also specify a Super Mario World URL from www.smwcentral.net.</li>
+            </ul>
+
+            <form method="post" action="{% url 'patcher:index' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <p class="mb-2">1. Source Super Mario World ROM: Super Mario World (USA).sfc</p>
+                <input type="file" class="form-control-file border" id="source_rom" name="source_rom">
+
+                <div class="form-group mt-4">
+                    <label for="input_patch">2. Patch File to Apply to ROM</label>
+                    <input type="text" class="form-control" id="input_patch" name="input_patch"
+                           placeholder="https://www.smwcentral.net/?p=section&a=details&id=18791">
+                </div>
+
+                <button type="submit" class="btn btn-lg btn-success">Patch ROM
+                    <i class="fas fa-save"></i></button>
+
+            </form>
+
+        </div>
+    </div>
+{% endblock %}
+
+{% block tail %}{% endblock %}
