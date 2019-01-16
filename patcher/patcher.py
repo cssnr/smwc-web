@@ -1,3 +1,4 @@
+import logging
 import os
 import tempfile
 import re
@@ -6,10 +7,12 @@ import subprocess
 import zipfile
 from bs4 import BeautifulSoup
 
+logger = logging.getLogger('app')
+
 
 class RomPatcher(object):
     flips = '/usr/local/bin/flips-linux'
-    tempdir_location = '/tmp/test'
+    tempdir_location = '/tmp'
     patch_pattern = '\.(bps|ips)$'
     archive_pattern = '\.(zip)$'
 
@@ -68,8 +71,12 @@ class RomPatcher(object):
             archive.close()
             patch_file = self.find_first_file(self.tempdir, self.patch_pattern)
 
-        self.patch_name = '{}.sfc'.format(os.path.basename(re.split(self.patch_pattern, patch_file)[0]))
+        file_name = re.split(self.patch_pattern, patch_file)[0].replace(' ', '_')
+        logger.info('file_name: {}'.format(file_name))
+        self.patch_name = '{}.sfc'.format(os.path.basename(file_name))
+        logger.info('self.patch_name: {}'.format(self.patch_name))
         output_file = os.path.join(self.tempdir, os.path.basename(self.patch_name))
+        logger.info('output_file: {}'.format(output_file))
 
         patch_command = [
             os.path.join(self.flips), '--apply', '--exact',
