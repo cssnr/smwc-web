@@ -9,17 +9,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Meta -->
-    <meta name="author" content="Shane"/>
-    <meta name="title" content="SMW Central ROM Archive"/>
-    <meta name="description" content="SMW Central ROM Archive with Super Mario World ROMs from www.smwcentral.net"/>
+    {% block meta %}
+        <meta name="author" content="Shane"/>
+        <meta name="title" content="SMW Central ROM Archive"/>
+        <meta name="description" content="SMW Central ROM Archive with Super Mario World ROMs from www.smwcentral.net"/>
 
-    <meta property="og:author" content="Shane">
-    <meta property="og:title" content="SMW Central ROM Archive">
-    <meta property="og:description" content="SMW Central ROM Archive with Super Mario World ROMs from www.smwcentral.net">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ request.scheme }}://{{ request.META.HTTP_HOST }}{% url 'home:index' %}">
-    <meta property="og:image" content="{{ request.scheme }}://{{ request.META.HTTP_HOST }}{% static 'images/logo.png' %}">
-    <meta property="og:image:type" content="image/png">
+        <meta property="og:author" content="Shane">
+        <meta property="og:title" content="SMW Central ROM Archive">
+        <meta property="og:description" content="SMW Central ROM Archive with Super Mario World ROMs from www.smwcentral.net">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ request.scheme }}://{{ request.META.HTTP_HOST }}{% url 'home:index' %}">
+        <meta property="og:image" content="{{ request.scheme }}://{{ request.META.HTTP_HOST }}{% static 'images/logo.png' %}">
+        <meta property="og:image:type" content="image/png">
+    {% endblock %}
 
     <title>SMW Central ROM Archive - {% block title %}{% endblock %}</title>
 

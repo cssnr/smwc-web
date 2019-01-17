@@ -1,8 +1,22 @@
 {% extends "main.html" %}
 {% block patcher_active %}active{% endblock %}
-{% block title %}ROM Patcher{% endblock %}
+{% block title %}Online ROM Patcher{% endblock %}
 {% load staticfiles %}
 {% load home_tags %}
+
+{% block meta %}
+    <meta name="author" content="Shane"/>
+    <meta name="title" content="Online SNES ROM Patcher"/>
+    <meta name="description" content="Easily patch SNES ROM's (.sfc) from remote patch files (.bps, .ips), remote archives (.zip) or smwcentral.net URLs; and do it directly in the web browser with no software download required."/>
+
+    <meta property="og:author" content="Shane">
+    <meta property="og:title" content="Online SNES ROM Patcher">
+    <meta property="og:description" content="Easily patch SNES ROM's (.sfc) from remote patch files (.bps, .ips), remote archives (.zip) or smwcentral.net URLs; and do it directly in the web browser with no software download required.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.scheme }}://{{ request.META.HTTP_HOST }}{% url 'patcher:index' %}">
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.META.HTTP_HOST }}{% static 'images/logo.png' %}">
+    <meta property="og:image:type" content="image/png">
+{% endblock %}
 
 {% block head %}{% endblock %}
 
@@ -54,6 +68,10 @@
 
             <div id="alerts-div"></div>
 
+            <h3 class="mt-4">Downloadable Version</h3>
+            <p>This ROM Patcher is also available for download on Windows and Linux for even faster patching with saved preferences.</p>
+            <p>View it on GitHub: <a href="https://github.com/smashedr/rom-patcher" target="_blank">
+                https://github.com/smashedr/rom-patcher</a> </p>
         </div>
     </div>
 {% endblock %}
