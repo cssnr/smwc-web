@@ -13,25 +13,27 @@
 
             <ul>
                 <li>1. Select the Source Super Mario World unmodified ROM from your computer.</li>
-                <li>2. Choose a local or remote patch file or zip containing a patch file.
-                    You may also specify a Super Mario World URL from www.smwcentral.net.</li>
+                <li>2. Choose a remote patch file, zip containing a patch file, or a Super Mario World ROM URL link from
+                    <a href="https://www.smwcentral.net/?p=section&s=smwhacks" target="_blank">www.smwcentral.net</a>.</li>
             </ul>
 
             <form id="patch-rom-form" name="patch-rom-form" method="post"
                   action="{% url 'patcher:index' %}" enctype="multipart/form-data">
                 {% csrf_token %}
 
-                <div class="form-group">
-                    <label for="inputAvatarFile">1. Source Super Mario World ROM: Super Mario World (USA).sfc</label>
-                    <input id="source_rom" name="source_rom" type="file" class="file-upload filestyle disabled"
-                           data-buttonText="Select Source ROM" data-buttonName="btn-success" data-buttonBefore="true">
-                </div>
+                <p>1. Source Super Mario World ROM: Super Mario World (USA).sfc</p>
+                <input id="source_rom" name="source_rom" type="file" class="mb-3" required>
+
+{#                <div class="custom-file">#}
+{#                    <input type="file" class="custom-file-input" id="source_rom" name="source_rom">#}
+{#                    <label class="custom-file-label" for="customFile">Source ROM</label>#}
+{#                </div>#}
 
                 <div class="form-group">
                     <label for="input_patch">2. URL to a patch file, zip file containing a patch file,
                         or smwcentral.net hack page.</label>
                     <input type="text" class="form-control" id="input_patch" name="input_patch"
-                           placeholder="https://www.smwcentral.net/?p=section&a=details&id=18791">
+                           placeholder="https://www.smwcentral.net/?p=section&a=details&id=18791" required>
                 </div>
 
                 <button id="patch-rom-btn" type="submit" class="btn btn-lg btn-success">
@@ -48,7 +50,6 @@
 {% endblock %}
 
 {% block tail %}
-    <script type="text/javascript" src="{% static 'bootstrap/bootstrap-filestyle.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'bootstrap/jquery.fileDownload.js' %}"></script>
     <script type="text/javascript" src="{% static 'main/js/patcher.js' %}"></script>
 {% endblock %}
