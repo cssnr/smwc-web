@@ -3,11 +3,21 @@ import sys
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.utils.encoding import smart_str
 from patcher.forms import PatcherForm
 from patcher.patcher import RomPatcher
 
 logger = logging.getLogger('app')
 config = settings.CONFIG
+
+
+def test_view(request):
+    response = HttpResponse(content_type='application/force-download')
+    response['Content-Disposition'] = 'attachment; filename=%s' % smart_str('test.file')
+    response['X-Sendfile'] = smart_str('/tmp/tmp.txt')
+    # It's usually a good idea to set the 'Content-Length' header too.
+    # You can also set any other required headers: Cache-Control, etc.
+    return response
 
 
 def show_patcher(request):
@@ -29,7 +39,7 @@ def show_patcher(request):
             # response['Content-Length'] = os.path.getsize(file_full_path)
             # return response
 
-            response = HttpResponse(patcher.patch_data, content_type='application/octet-stream')
+            response = HttpResponse(patcher.patch_data, content_type='application/force-download')
             response['Content-Disposition'] = "attachment; filename={0}".format(patcher.patch_name)
             response['Content-Length'] = sys.getsizeof(patcher.patch_data)
             return response
@@ -40,5 +50,3 @@ def show_patcher(request):
     else:
         logger.info('GET')
         return render(request, 'patcher.html')
-
-

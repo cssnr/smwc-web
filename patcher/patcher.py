@@ -32,7 +32,7 @@ class RomPatcher(object):
     def write_source_to_file(self, source_rom):
         raw_file = source_rom.read()
         file_path = os.path.join(self.tempdir, os.path.basename('smw.sfc'))
-        with open(file_path, 'wb') as f:
+        with open(file_path, 'wb+') as f:
             f.write(raw_file)
             f.close()
             del raw_file, source_rom
@@ -59,7 +59,7 @@ class RomPatcher(object):
             r.raise_for_status()
 
         patch_file = os.path.join(self.tempdir, os.path.basename(rom_url))
-        with open(patch_file, 'wb') as f:
+        with open(patch_file, 'wb+') as f:
             f.write(r.content)
             f.close()
         return patch_file
@@ -85,7 +85,6 @@ class RomPatcher(object):
         subprocess.check_call(patch_command)
         with open(output_file, 'rb') as f:
             self.patch_data = f.read()
-            self.TempDir.cleanup()
 
     @staticmethod
     def find_first_file(directory, pattern):
