@@ -1,9 +1,10 @@
 import logging
-import sys
+import os
 from django.conf import settings
-from django.http import HttpResponse
+from django.core.files.storage import FileSystemStorage
+from django.http import JsonResponse
 from django.shortcuts import render
-from django.utils.encoding import smart_str
+from django.utils.crypto import get_random_string
 from patcher.forms import PatcherForm
 from patcher.patcher import RomPatcher
 
@@ -11,42 +12,38 @@ logger = logging.getLogger('app')
 config = settings.CONFIG
 
 
-def test_view(request):
-    response = HttpResponse(content_type='application/force-download')
-    response['Content-Disposition'] = 'attachment; filename=%s' % smart_str('test.file')
-    response['X-Sendfile'] = smart_str('/tmp/tmp.txt')
-    # It's usually a good idea to set the 'Content-Length' header too.
-    # You can also set any other required headers: Cache-Control, etc.
-    return response
-
-
 def show_patcher(request):
     # View: /
     if request.method == 'POST':
         logger.info('POST')
-        form = PatcherForm(request.POST, request.FILES)
-        if form.is_valid():
-            logger.info('VALID')
-            source_rom = request.FILES['source_rom']
-            # logger.info(source_rom)
-            # raw_file = source_rom.read()
-            patcher = RomPatcher(source_rom)
-            patch_file = patcher.download_rom(form.cleaned_data['input_patch'])
-            patcher.patch_rom(patch_file)
+        try:
+            form = PatcherForm(request.POST, request.FILES)
+            if not form.is_valid():
+                return JsonResponse({'error': form.errors}, status=400)
+            if form.is_valid():
+                logger.info('VALID')
+                logger.info(request.FILES['source_rom'])
+                logger.info(form.cleaned_data['input_patch'])
 
-            # response = HttpResponse(data, content_type=mimetypes.guess_type(file_full_path)[0])
-            # response['Content-Disposition'] = "attachment; filename={0}".format(filename)
-            # response['Content-Length'] = os.path.getsize(file_full_path)
-            # return response
+                source_rom = request.FILES['source_rom']
+                patcher = RomPatcher(source_rom)
+                patch_file = patcher.download_rom(form.cleaned_data['input_patch'])
+                logger.info('patch_file: {}'.format(patch_file))
+                output_file = patcher.patch_rom(patch_file)
+                logger.info('output_file: {}'.format(output_file))
 
-            response = HttpResponse(patcher.patch_data, content_type='application/force-download')
-            response['Content-Disposition'] = "attachment; filename={0}".format(patcher.patch_name)
-            response['Content-Length'] = sys.getsizeof(patcher.patch_data)
-            return response
+                rand = get_random_string()
+                fs = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, rand))
+                fs.base_url += rand + '/'
+                filename = fs.save(patcher.patch_name, open(output_file, 'rb'))
+                logger.info('filename: {}'.format(filename))
+                logger.info('fs.path(filename): {}'.format(fs.path(filename)))
+                logger.info('fs.url(filename): {}'.format(fs.url(filename)))
 
-        else:
-            logger.info('INVALID')
-            return render(request, 'patcher.html')
+                return JsonResponse({'location': fs.url(filename)})
+        except Exception as error:
+            logger.exception(error)
+            return JsonResponse({'error': error}, status=400)
     else:
         logger.info('GET')
         return render(request, 'patcher.html')

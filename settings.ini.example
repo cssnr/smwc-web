@@ -5,6 +5,7 @@ allowed_hosts   = *
 language_code   = en-us
 time_zone       = America/Los_Angeles
 static_root     = /var/www/html/static
+media_root      = /data/smwc-web/media
 sqlite_db       = db.sqlite3
 
 [logging]

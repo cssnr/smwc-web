@@ -21,7 +21,7 @@ class RomPatcher(object):
         self.tempdir = self.TempDir.name
         self.source_rom = self.write_source_to_file(source_rom)
         self.patch_name = None
-        self.patch_data = None
+        self.output_file = None
 
     def __repr__(self):
         return 'RomPatcher: {}'.format(self.tempdir)
@@ -75,16 +75,16 @@ class RomPatcher(object):
         logger.info('file_name: {}'.format(file_name))
         self.patch_name = '{}.sfc'.format(os.path.basename(file_name))
         logger.info('self.patch_name: {}'.format(self.patch_name))
-        output_file = os.path.join(self.tempdir, os.path.basename(self.patch_name))
-        logger.info('output_file: {}'.format(output_file))
+        self.output_file = os.path.join(self.tempdir, os.path.basename(self.patch_name))
+        logger.info('self.output_file: {}'.format(self.output_file))
 
         patch_command = [
             os.path.join(self.flips), '--apply', '--exact',
-            patch_file, self.source_rom, output_file,
+            patch_file, self.source_rom, self.output_file,
         ]
-        subprocess.check_call(patch_command)
-        with open(output_file, 'rb') as f:
-            self.patch_data = f.read()
+        call = subprocess.check_call(patch_command)
+        logger.info('call: {}'.format(call))
+        return self.output_file
 
     @staticmethod
     def find_first_file(directory, pattern):

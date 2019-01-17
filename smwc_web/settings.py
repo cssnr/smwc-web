@@ -24,6 +24,7 @@ ALLOWED_HOSTS = CONFIG['django']['allowed_hosts'].split(' ')
 DEBUG = strtobool(CONFIG['django']['debug'])
 SECRET_KEY = CONFIG['django']['secret']
 STATIC_ROOT = CONFIG['django']['static_root']
+MEDIA_ROOT = CONFIG['django']['media_root']
 
 LANGUAGE_CODE = CONFIG['django']['language_code']
 TIME_ZONE = CONFIG['django']['time_zone']
@@ -62,10 +63,7 @@ STATSD_PREFIX = CONFIG.get('statsd', 'metric_prefix', fallback='smwcweb.dev')
 STATSD_PORT = CONFIG.getint('statsd', 'metric_port', fallback=8125)
 STATSD_HOST = CONFIG.get('statsd', 'metric_host', fallback='localhost')
 STATSD_CLIENT = CONFIG.get('statsd', 'metric_client', fallback='django_statsd.clients.toolbar')
-# STATSD_PATCHES = [
-#     'django_statsd.patches.db',
-#     'django_statsd.patches.cache',
-# ]
+
 
 if DEBUG:
     DEBUG_TOOLBAR_PANELS = [
