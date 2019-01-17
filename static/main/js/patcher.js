@@ -1,6 +1,10 @@
 // Document Dot Ready
 $(document).ready(function() {
 
+    $( "#patch-rom-btn" ).click(function() {
+        $('#patch-rom-form').find('[type="submit"]').trigger('click');
+    });
+
     $('#patch-rom-form').on('submit', function(event){
         event.preventDefault();
         if ($('#patch-rom-btn').hasClass('disabled')) { return; }
@@ -14,6 +18,7 @@ $(document).ready(function() {
                 $('#patch-rom-btn').addClass('disabled');
                 $('#search-icon').addClass('fa-spin');
                 $('#rom-status').addClass('progress-bar-striped progress-bar-animated');
+                $('#alerts-div').empty();
             },
             complete: function(){
                 $('#search-icon').removeClass('fa-spin');
@@ -23,6 +28,7 @@ $(document).ready(function() {
             success: function(data, textStatus, jqXHR){
                 console.log('Status: '+jqXHR.status+', Data: '+JSON.stringify(data));
                 $.fileDownload(data.location);
+                $('#alerts-div').html(gen_alert('Success! Your download should start now...'));
             },
             error: function(data, textStatus) {
                 console.log('Status: '+data.status+', Response: '+data.responseText);
@@ -41,3 +47,12 @@ $(document).ready(function() {
     });
 
 } );
+
+function gen_alert(message) {
+    return ('<div class="alert alert-success alert-dismissible fade show" role="alert">\n' +
+        '  ' + message + '\n' +
+        '  <button type="button" class="close" data-dismiss="alert" aria-label="Close">\n' +
+        '    <span aria-hidden="true">&times;</span>\n' +
+        '  </button>\n' +
+        '</div>');
+}
