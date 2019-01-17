@@ -11,6 +11,10 @@
         <div class="col">
             <h1>ROM Patcher</h1>
 
+            <div class="alert alert-dismissible alert-primary">
+                <strong>Note:</strong> this feature is currently in development. It may have bugs and receive frequent updates.
+            </div>
+
             <ul>
                 <li>1. Select the Source Super Mario World unmodified ROM from your computer.</li>
                 <li>2. Choose a remote patch file, zip containing a patch file, or a Super Mario World ROM URL link from
@@ -19,7 +23,6 @@
 
             <div class="card">
                 <div class="card-body">
-
 
                     <form id="patch-rom-form" name="patch-rom-form" method="post"
                           action="{% url 'patcher:index' %}" enctype="multipart/form-data">
