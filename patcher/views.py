@@ -1,5 +1,6 @@
 import logging
 import os
+from django_statsd.clients import statsd
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.http import JsonResponse
@@ -13,7 +14,7 @@ logger = logging.getLogger('app')
 config = settings.CONFIG
 
 
-def show_patcher(request):
+def rom_patcher(request):
     # View: /
     if request.method == 'POST':
         logger.info('POST')
@@ -22,6 +23,7 @@ def show_patcher(request):
             if not form.is_valid():
                 return JsonResponse({'error': form.errors}, status=400)
             if form.is_valid():
+                statsd.incr('patcher.rom_patcher.click')
                 logger.info('VALID')
                 logger.info(request.FILES['source_rom'])
                 logger.info(form.cleaned_data['input_patch'])
@@ -42,10 +44,12 @@ def show_patcher(request):
                 logger.info('fs.url(filename): {}'.format(fs.url(filename)))
 
                 cleanup_hack.apply_async((os.path.dirname(fs.path(filename)),), countdown=60)
+                statsd.incr('patcher.rom_patcher.success')
 
                 return JsonResponse({'location': fs.url(filename)})
         except Exception as error:
             logger.exception(error)
+            statsd.incr('patcher.rom_patcher.error')
             return JsonResponse({'error': error}, status=400)
     else:
         logger.info('GET')
