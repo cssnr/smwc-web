@@ -1,0 +1,82 @@
+{% extends "main.html" %}
+{% block patcher_active %}active{% endblock %}
+{% block title %}Online ROM Patcher{% endblock %}
+{% load staticfiles %}
+{% load home_tags %}
+
+{% block meta %}
+    <meta name="author" content="Shane"/>
+    <meta name="title" content="Online SNES ROM Patcher"/>
+    <meta name="description" content="Easily patch SNES ROM's (.sfc) from remote patch files (.bps, .ips), remote archives (.zip) or smwcentral.net URLs; and do it directly in the web browser with no software download required."/>
+
+    <meta property="og:author" content="Shane">
+    <meta property="og:title" content="Online SNES ROM Patcher">
+    <meta property="og:description" content="Easily patch SNES ROM's (.sfc) from remote patch files (.bps, .ips), remote archives (.zip) or smwcentral.net URLs; and do it directly in the web browser with no software download required.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.scheme }}://{{ request.META.HTTP_HOST }}{% url 'patcher:index' %}">
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.META.HTTP_HOST }}{% static 'images/logo.png' %}">
+    <meta property="og:image:type" content="image/png">
+{% endblock %}
+
+{% block head %}{% endblock %}
+
+{% block body %}
+    <div class="row mt-2">
+        <div class="col">
+            <h1>ROM Patcher</h1>
+
+            <div class="alert alert-dismissible alert-primary">
+                <strong>Note:</strong> this feature is currently in development. It may have bugs and receive frequent updates.
+            </div>
+
+            <ul>
+                <li>1. Select the Source Super Mario World unmodified ROM from your computer.</li>
+                <li>2. Choose a remote patch file, zip containing a patch file, or a Super Mario World ROM URL link from
+                    <a href="https://www.smwcentral.net/?p=section&s=smwhacks" target="_blank">www.smwcentral.net</a>.</li>
+            </ul>
+
+            <div class="card">
+                <div class="card-body">
+
+                    <form id="patch-rom-form" name="patch-rom-form" method="post"
+                          action="{% url 'patcher:index' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <p>1. Source Super Mario World ROM: Super Mario World (USA).sfc</p>
+                        <input id="source_rom" name="source_rom" type="file" class="mb-3" required>
+
+                        <div class="form-group">
+                            <label for="input_patch">2. URL to a patch file, zip file containing a patch file,
+                                or smwcentral.net hack page.</label>
+                            <input type="text" class="form-control" id="input_patch" name="input_patch"
+                                   placeholder="https://www.smwcentral.net/?p=section&a=details&id=18791" required>
+                        </div>
+
+                        <button type="submit" hidden></button>
+                    </form>
+
+                    <div class="progress mt-2">
+                        <div id="rom-status" class="progress-bar" role="progressbar"
+                             aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
+                    </div>
+
+                </div>
+            </div>
+
+            <button id="patch-rom-btn" class="btn btn-lg btn-success my-2">
+                Patch ROM <i id="search-icon" class="fas fa-sync ml-2"></i></button>
+
+            <div id="alerts-div"></div>
+
+            <h3 class="mt-4">Downloadable Version</h3>
+            <p>This ROM Patcher is also available for download on Windows and Linux for even faster patching with saved preferences.</p>
+            <p>View it on GitHub: <a href="https://github.com/smashedr/rom-patcher" target="_blank">
+                https://github.com/smashedr/rom-patcher</a> </p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block tail %}
+    <script type="text/javascript" src="{% static 'bootstrap/jquery.fileDownload.js' %}"></script>
+    <script type="text/javascript" src="{% static 'main/js/patcher.js' %}"></script>
+{% endblock %}
