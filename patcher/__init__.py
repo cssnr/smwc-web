@@ -1,1 +1,1 @@
-default_app_config = 'home.apps.PatcherConfig'
+default_app_config = 'patcher.apps.PatcherConfig'
