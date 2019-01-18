@@ -7,6 +7,7 @@ from django.shortcuts import render
 from django.utils.crypto import get_random_string
 from patcher.forms import PatcherForm
 from patcher.patcher import RomPatcher
+from patcher.tasks import cleanup_hack
 
 logger = logging.getLogger('app')
 config = settings.CONFIG
@@ -39,6 +40,8 @@ def show_patcher(request):
                 logger.info('filename: {}'.format(filename))
                 logger.info('fs.path(filename): {}'.format(fs.path(filename)))
                 logger.info('fs.url(filename): {}'.format(fs.url(filename)))
+
+                cleanup_hack.apply_async((os.path.dirname(fs.path(filename)),), countdown=60)
 
                 return JsonResponse({'location': fs.url(filename)})
         except Exception as error:
