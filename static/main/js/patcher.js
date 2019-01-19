@@ -9,7 +9,6 @@ $(document).ready(function() {
         event.preventDefault();
         if ($('#patch-rom-btn').hasClass('disabled')) { return; }
         var formData = new FormData($(this)[0]);
-        console.log(window.location.pathname);
         $.ajax({
             url: window.location.pathname,
             type: 'POST',

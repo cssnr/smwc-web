@@ -4,11 +4,11 @@ import logging
 import os
 import re
 import requests
-import time
 import urllib3
-import urllib.parse as urlparse
+from urllib import parse
 from django_statsd.clients import statsd
 from django.conf import settings
+from django.utils.text import slugify
 from bs4 import BeautifulSoup
 from celery import task
 from home.models import Hacks, Webhooks
@@ -33,7 +33,7 @@ def process_hacks():
             logger.debug('href: {}'.format(h['href']))
             hack_url = h['href'] if h['href'].startswith('http') else settings.APP_SMWC_URL + h['href']
             logger.debug('hack_url: {}'.format(hack_url))
-            query = urlparse.parse_qs(urlparse.urlparse(hack_url).query)
+            query = parse.parse_qs(parse.urlparse(hack_url).query)
             smwc_id = SmwCentral.verify_hack(h, query['id'][0].strip())
             if not smwc_id:
                 logging.debug('Unable to verify hack: {}'.format(h.text))
@@ -126,6 +126,7 @@ def send_discord_message(url, message):
             logger.warning(r.content.decode(r.encoding))
             r.raise_for_status()
         return '{}: {}'.format(r.status_code, r.content.decode(r.encoding))
+
     except Exception as error:
         statsd.incr('tasks.send_discord_message.errors.')
         logger.exception(error)
@@ -152,6 +153,7 @@ class SmwCentral(object):
         if smwc_id < settings.APP_MIN_HACK_ID:
             logger.debug('New hack below min ID: {}'.format(smwc_id))
             return False
+
         try:
             if h.parent.has_attr('class'):
                 if h.parent.attrs['class'][0] == 'rope':
@@ -161,6 +163,7 @@ class SmwCentral(object):
                 logger.debug('New hack detected in as tip: {}'.format(smwc_id))
                 return False
             return smwc_id
+
         except Exception as error:
             logger.debug(error)
             return False
@@ -173,6 +176,7 @@ class SmwCentral(object):
             statsd.incr('tasks.update_hack_info.status_codes.{}'.format(r.status_code))
             if r.status_code != 200:
                 raise Exception('Error retrieving smwc webpage: {}'.format(r.status_code))
+
             soup = BeautifulSoup(r.content.decode(r.encoding), 'html.parser')
             download = soup.find(string='Download')
             hack.download_url = 'https:{}'.format(download.findPrevious()['href'])
@@ -209,8 +213,14 @@ class SmwCentral(object):
             if r.status_code != 200:
                 logger.error(r.content.decode(r.encoding))
                 raise Exception('Error retrieving rom download archive: {}'.format(r.status_code))
-            rom_file_name = os.path.basename(hack.download_url).replace('%20', '_')
-            file_name = '{}-{}'.format(hack.smwc_id, rom_file_name)
+
+            parsed = parse.unquote(os.path.basename(parse.urlparse(hack.download_url).path))
+            logger.debug('parsed: {}'.format(parsed))
+            name, extension = os.path.splitext(parsed)
+            logger.debug('name: {}'.format(name))
+            logger.debug('extension: {}'.format(extension))
+            slug = slugify(hack.name) if hack.name else slugify(name)
+            file_name = '{}-{}{}'.format(slug, hack.smwc_id, extension)
             logger.debug('file_name: {}'.format(file_name))
             year_month = datetime.datetime.now().strftime('%Y/%B')
             file_dir = os.path.join(settings.APP_ROMS_DIR, year_month)
