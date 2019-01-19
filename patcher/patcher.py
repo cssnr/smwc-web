@@ -5,6 +5,7 @@ import re
 import requests
 import subprocess
 import zipfile
+from django.utils.text import slugify
 from bs4 import BeautifulSoup
 
 logger = logging.getLogger('app')
@@ -71,9 +72,9 @@ class RomPatcher(object):
             archive.close()
             patch_file = self.find_first_file(self.tempdir, self.patch_pattern)
 
-        file_name = re.split(self.patch_pattern, patch_file)[0].replace(' ', '_')
+        file_name = slugify(os.path.basename(re.split(self.patch_pattern, patch_file)[0]))
         logger.info('file_name: {}'.format(file_name))
-        self.patch_name = '{}.sfc'.format(os.path.basename(file_name))
+        self.patch_name = '{}.sfc'.format(file_name)
         logger.info('self.patch_name: {}'.format(self.patch_name))
         self.output_file = os.path.join(self.tempdir, os.path.basename(self.patch_name))
         logger.info('self.output_file: {}'.format(self.output_file))
