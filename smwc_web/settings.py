@@ -38,6 +38,7 @@ APP_SITE_URL = CONFIG['app']['site_url']
 APP_ROMS_URL = CONFIG['app']['roms_url']
 APP_SMWC_URL = CONFIG['app']['smwc_url']
 APP_MIN_HACK_ID = int(CONFIG['app']['min_hack_id'])
+APP_DISCORD_INVITE = CONFIG['app']['discord_invite']
 
 OAUTH_CLIENT_ID = CONFIG['oauth']['client_id']
 OAUTH_CLIENT_SECRET = CONFIG['oauth']['client_secret']
