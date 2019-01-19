@@ -28,6 +28,7 @@ site_url       = https://smwc.world
 roms_url       = https://roms.smwc.world
 smwc_url       = https://www.smwcentral.net
 min_hack_id    = 18000
+discord_invite = https://discord.gg/6pzXJE5
 
 [statsd]
 metric_host     = graphite.cssnr.com
