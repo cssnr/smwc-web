@@ -20,7 +20,7 @@ class RomPatcher(object):
     def __init__(self, source_rom):
         self.TempDir = tempfile.TemporaryDirectory(dir=self.tempdir_location)
         self.tempdir = self.TempDir.name
-        self.source_rom = self.write_source_to_file(source_rom)
+        self.source_rom = self.write_input_to_file(source_rom, 'smw.sfc')
         self.patch_name = None
         self.output_file = None
 
@@ -30,13 +30,12 @@ class RomPatcher(object):
     def __str__(self):
         return str(self.__repr__)
 
-    def write_source_to_file(self, source_rom):
+    def write_input_to_file(self, source_rom, file_name):
         raw_file = source_rom.read()
-        file_path = os.path.join(self.tempdir, os.path.basename('smw.sfc'))
+        file_path = os.path.join(self.tempdir, os.path.basename(file_name))
         with open(file_path, 'wb+') as f:
             f.write(raw_file)
             f.close()
-            del raw_file, source_rom
             return file_path
 
     def download_rom(self, rom_url):

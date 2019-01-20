@@ -38,32 +38,37 @@
             <p>Demo: To watch a .gif (video) on how this tool works
                 <a href="https://imgg.site/s/rom-patcher-website.gif" target="_blank">click here</a>.</p>
 
-            <div class="card">
-                <div class="card-body">
+            <form id="patch-rom-form" name="patch-rom-form" method="post"
+                  action="{% url 'patcher:index' %}" enctype="multipart/form-data">
+                {% csrf_token %}
 
-                    <form id="patch-rom-form" name="patch-rom-form" method="post"
-                          action="{% url 'patcher:index' %}" enctype="multipart/form-data">
-                        {% csrf_token %}
+                <div class="card border-primary my-1">
+                    <div class="card-body">
+                            <p>1. Source Super Mario World ROM: Super Mario World (USA).sfc</p>
+                            <input id="source_rom" name="source_rom" type="file" class="mb-3" required>
+                    </div>
+                </div>
 
-                        <p>1. Source Super Mario World ROM: Super Mario World (USA).sfc</p>
-                        <input id="source_rom" name="source_rom" type="file" class="mb-3" required>
-
+                <div class="card border-primary my-1">
+                    <div class="card-body">
+                        <p>2a. Local patch file to apply.</p>
+                        <input id="input_file" name="input_file" type="file" class="mb-3">
+                        <p>-- OR --</p>
                         <div class="form-group">
-                            <label for="input_patch">2. URL to a patch file, zip file containing a patch file,
+                            <label for="input_patch">2b. URL to a patch file, zip file containing a patch file,
                                 or smwcentral.net hack page.</label>
                             <input type="text" class="form-control" id="input_patch" name="input_patch"
-                                   placeholder="https://www.smwcentral.net/?p=section&a=details&id=18791" required>
+                                   placeholder="https://www.smwcentral.net/?p=section&a=details&id=18791">
                         </div>
-
-                        <button type="submit" hidden></button>
-                    </form>
-
-                    <div class="progress mt-2">
-                        <div id="rom-status" class="progress-bar" role="progressbar"
-                             aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
                     </div>
-
                 </div>
+
+                <button type="submit" hidden></button>
+            </form>
+
+            <div class="progress mt-2">
+                <div id="rom-status" class="progress-bar" role="progressbar"
+                     aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
             </div>
 
             <button id="patch-rom-btn" class="btn btn-lg btn-success my-2">

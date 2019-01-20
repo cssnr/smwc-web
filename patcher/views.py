@@ -17,40 +17,40 @@ config = settings.CONFIG
 def rom_patcher(request):
     # View: /
     if request.method == 'POST':
-        logger.info('POST')
         try:
             form = PatcherForm(request.POST, request.FILES)
             if not form.is_valid():
                 return JsonResponse({'error': form.errors}, status=400)
+
             if form.is_valid():
                 statsd.incr('patcher.rom_patcher.click')
-                logger.info('VALID')
-                logger.info(request.FILES['source_rom'])
-                logger.info(form.cleaned_data['input_patch'])
+                logger.debug(request.FILES['source_rom'])
+                logger.debug('input_patch: {}'.format(form.cleaned_data['input_patch']))
+                patcher = RomPatcher(request.FILES['source_rom'])
+                if form.cleaned_data['input_patch']:
+                    patch_file = patcher.download_rom(form.cleaned_data['input_patch'])
+                else:
+                    logger.debug(request.FILES['input_file'])
+                    patch_file = patcher.write_input_to_file(
+                        request.FILES['input_file'], request.FILES['input_file'].name)
 
-                source_rom = request.FILES['source_rom']
-                patcher = RomPatcher(source_rom)
-                patch_file = patcher.download_rom(form.cleaned_data['input_patch'])
-                logger.info('patch_file: {}'.format(patch_file))
+                logger.debug('patch_file: {}'.format(patch_file))
                 output_file = patcher.patch_rom(patch_file)
-                logger.info('output_file: {}'.format(output_file))
-
+                logger.debug('output_file: {}'.format(output_file))
                 rand = get_random_string()
                 fs = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, rand))
                 fs.base_url += rand + '/'
                 filename = fs.save(patcher.patch_name, open(output_file, 'rb'))
-                logger.info('filename: {}'.format(filename))
-                logger.info('fs.path(filename): {}'.format(fs.path(filename)))
-                logger.info('fs.url(filename): {}'.format(fs.url(filename)))
-
+                logger.debug('filename: {}'.format(filename))
+                logger.debug('fs.path(filename): {}'.format(fs.path(filename)))
+                logger.debug('fs.url(filename): {}'.format(fs.url(filename)))
                 cleanup_hack.apply_async((os.path.dirname(fs.path(filename)),), countdown=60)
                 statsd.incr('patcher.rom_patcher.success')
-
                 return JsonResponse({'location': fs.url(filename)})
+
         except Exception as error:
             logger.exception(error)
             statsd.incr('patcher.rom_patcher.error')
             return JsonResponse({'error': error}, status=400)
     else:
-        logger.info('GET')
         return render(request, 'patcher.html')
