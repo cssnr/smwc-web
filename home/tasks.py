@@ -39,9 +39,11 @@ def process_hacks():
                 logging.debug('Unable to verify hack: {}'.format(h.text))
                 continue
 
-            hack, created = Hacks.objects.get_or_create(smwc_id=smwc_id, name=h.text, smwc_href=h['href'])
+            hack, created = Hacks.objects.get_or_create(smwc_id=smwc_id)
             logger.debug('created: {}'.format(created))
             if created:
+                hack.name = h.text
+                hack.smwc_href = h['href']
                 logger.info('New Hack: {} | {} | {}'.format(hack.smwc_id, hack.name, hack.get_hack_url()))
                 statsd.incr('tasks.process_hacks.created')
                 SmwCentral.update_hack_info(hack)
