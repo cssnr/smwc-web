@@ -9,7 +9,7 @@ flower
 gunicorn
 mysqlclient
 Pillow
-redis<3
+redis<4
 requests
 statsd
 tornado<5

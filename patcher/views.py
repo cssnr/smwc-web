@@ -34,8 +34,10 @@ def rom_patcher(request):
                     patch_file = patcher.write_input_to_file(
                         request.FILES['input_file'], request.FILES['input_file'].name)
 
+                source_name, source_ext = os.path.splitext(request.FILES['source_rom'].name)
+                logger.debug('source_ext: {}'.format(source_ext))
                 logger.debug('patch_file: {}'.format(patch_file))
-                output_file = patcher.patch_rom(patch_file)
+                output_file = patcher.patch_rom(patch_file, source_ext)
                 logger.debug('output_file: {}'.format(output_file))
                 rand = get_random_string()
                 fs = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, rand))

@@ -64,7 +64,7 @@ class RomPatcher(object):
             f.close()
         return patch_file
 
-    def patch_rom(self, patch_file):
+    def patch_rom(self, patch_file, source_ext):
         if re.search(self.archive_pattern, patch_file, re.IGNORECASE):
             archive = zipfile.ZipFile(patch_file)
             archive.extractall(self.tempdir)
@@ -79,9 +79,10 @@ class RomPatcher(object):
         logger.info('self.output_file: {}'.format(self.output_file))
 
         patch_command = [
-            os.path.join(self.flips), '--apply', '--exact',
-            patch_file, self.source_rom, self.output_file,
+            self.flips, '--apply', patch_file, self.source_rom, self.output_file
         ]
+        if source_ext.lower() != '.smc':
+            patch_command.insert(1, '--exact')
         call = subprocess.check_call(patch_command)
         logger.info('call: {}'.format(call))
         return self.output_file
