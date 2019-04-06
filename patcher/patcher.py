@@ -73,7 +73,7 @@ class RomPatcher(object):
 
         file_name = slugify(os.path.basename(re.split(self.patch_pattern, patch_file)[0]))
         logger.info('file_name: {}'.format(file_name))
-        self.patch_name = '{}.sfc'.format(file_name)
+        self.patch_name = '{}.{}'.format(file_name, source_ext.lstrip('.'))
         logger.info('self.patch_name: {}'.format(self.patch_name))
         self.output_file = os.path.join(self.tempdir, os.path.basename(self.patch_name))
         logger.info('self.output_file: {}'.format(self.output_file))
