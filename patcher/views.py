@@ -35,6 +35,8 @@ def rom_patcher(request):
                         request.FILES['input_file'], request.FILES['input_file'].name)
 
                 source_name, source_ext = os.path.splitext(request.FILES['source_rom'].name)
+                if not source_ext:
+                    source_ext = '.sfc'
                 logger.debug('source_ext: {}'.format(source_ext))
                 logger.debug('patch_file: {}'.format(patch_file))
                 output_file = patcher.patch_rom(patch_file, source_ext)
