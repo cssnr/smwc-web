@@ -44,15 +44,15 @@
 
                 <div class="card border-primary my-1">
                     <div class="card-body">
+                        <p>1a. Local patch file to apply (*.ips, *.bps, *.zip).</p>
+                        <input id="patch_file" name="patch_file" type="file" class="mb-3">
+                        <p>-- OR --</p>
                         <div class="form-group">
-                            <label for="patch_url">1a. URL to a patch file, zip file containing a patch file,
+                            <label for="patch_url">1b. URL to a patch file, zip file containing a patch file,
                                 or smwcentral.net hack page.</label>
                             <input type="text" class="form-control" id="patch_url" name="patch_url"
                                    placeholder="https://www.smwcentral.net/?p=section&a=details&id=18791">
                         </div>
-                        <p>-- OR --</p>
-                        <p>1b. Local patch file to apply (*.ips, *.bps, *.zip).</p>
-                        <input id="patch_file" name="patch_file" type="file" class="mb-3">
                     </div>
                 </div>
 
@@ -76,7 +76,7 @@
                                    value="https://github.com/videofindersTV/super-mario-world/raw/master/Super.Mario.World.1.smc">
                         </div>
                         <p>-- OR --</p>
-                        <p>2b. Source Super Mario World ROM: Super Mario World (USA).sfc</p>
+                        <p>2b. Local Source Super Mario World ROM.</p>
                         <input id="source_file" name="source_file" type="file" class="mb-3">
                     </div>
                 </div>

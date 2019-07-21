@@ -43,7 +43,7 @@ def rom_patcher(request):
             logger.debug('patcher.source_rom_path: {}'.format(patcher.source_rom_path))
 
             # 1 - PATCH FILE
-            if request.FILES['patch_file']:
+            if form.cleaned_data['patch_file']:
                 # 1a - patch FILE provided
                 logger.debug(request.FILES['patch_file'])
                 patcher.patch_file = patcher.write_input_to_file(
