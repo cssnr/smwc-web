@@ -53,7 +53,7 @@
                                 or smwcentral.net hack page.</label>
                             <input type="text" class="form-control" id="patch_url" name="patch_url"
                                    placeholder="https://www.smwcentral.net/?p=section&a=details&id=18791"
-                                   {% if 'source' in request.GET %}value="{{ request.GET.source }}"{% endif %}>
+                                   {% if 'patch' in request.GET %}value="{{ request.GET.patch }}"{% endif %}>
                         </div>
                     </div>
                 </div>
@@ -76,7 +76,8 @@
                             <label for="source_url">2a. URL to a patch file, zip file containing a patch file,
                                 or smwcentral.net hack page.</label>
                             <input type="text" class="form-control" id="source_url" name="source_url"
-                                   value="https://github.com/videofindersTV/super-mario-world/raw/master/Super.Mario.World.1.smc">
+                                   {% if 'source' in request.GET %} value="{{ request.GET.source }}" {% else %}
+                                   value="https://github.com/videofindersTV/super-mario-world/raw/master/Super.Mario.World.1.smc" {% endif %}>
                         </div>
                         <p>-- OR --</p>
                         <p>2b. Local Source Super Mario World ROM.</p>

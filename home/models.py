@@ -53,7 +53,7 @@ class Hacks(models.Model):
     def get_patcher_url(self):
         hack_url = self.get_hack_url()
         if hack_url:
-            return settings.APP_PATCHER_URL + '?source=' + quote_plus(hack_url)
+            return settings.APP_PATCHER_URL + '?patch=' + quote_plus(hack_url)
         else:
             return None
 

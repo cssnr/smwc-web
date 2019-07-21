@@ -11,9 +11,10 @@ from django.conf import settings
 from django.utils.text import slugify
 from bs4 import BeautifulSoup
 from celery import task
+from home.functions import get_short_url
 from home.models import Hacks, Webhooks
 
-logger = logging.getLogger('celery')
+logger = logging.getLogger('app')
 urllib3.disable_warnings()
 
 
@@ -39,6 +40,7 @@ def process_hacks():
                 logging.debug('Unable to verify hack: {}'.format(h.text))
                 continue
 
+            logger.debug('smwc_id: {}'.format(smwc_id))
             hack, created = Hacks.objects.get_or_create(smwc_id=smwc_id)
             logger.debug('created: {}'.format(created))
             if created:
@@ -67,7 +69,10 @@ def process_alert(hack_pk):
     if hack.get_archive_url():
         message += '\nArchive URL: {}'.format(hack.get_archive_url())
     if hack.get_patcher_url():
-        message += '\nPatcher URL: {}'.format(hack.get_patcher_url())
+        short_url = get_short_url(hack.get_patcher_url())
+        if short_url:
+            logger.debug('short_url: {}'.format(short_url))
+            message += '\nPatcher URL: <{}>'.format(short_url)
     if hack.difficulty:
         message += '\nDifficulty: **{}**'.format(hack.difficulty)
     if hack.length:
@@ -91,8 +96,6 @@ def process_alert(hack_pk):
             continue
         logger.debug('Sending alert to: {}'.format(hook.owner_username))
         send_alert.delay(hook.id, message)
-        # logger.debug('-- hooks loop finished - sleep 5')
-        # time.sleep(5)
 
 
 @task(name='send_alert', retry_kwargs={'max_retries': 5, 'countdown': 120})
@@ -196,6 +199,8 @@ class SmwCentral(object):
 
             d = soup.find(string=re.compile('.*Description:.*'))
             hack.description = d.parent.parent.find(class_='cell2').text.strip()
+            logger.debug(type(hack.description))
+            logger.debug('hack.description: {}'.format(hack.description))
 
             d = soup.find(string=re.compile('.*Demo:.*'))
             demo = d.parent.parent.find(class_='cell2').text.strip()
@@ -231,6 +236,7 @@ class SmwCentral(object):
             logger.debug('file_dir: {}'.format(file_dir))
             file_uri = os.path.join(year_month, file_name)
             logger.debug('file_uri: {}'.format(file_uri))
+            hack.file_uri = file_uri
             if not os.path.exists(file_dir):
                 os.makedirs(file_dir)
             file_path = os.path.join(file_dir, file_name)
@@ -238,4 +244,3 @@ class SmwCentral(object):
             with open(file_path, 'wb') as f:
                 f.write(r.content)
                 f.close()
-            hack.file_uri = file_uri
