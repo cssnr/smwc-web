@@ -33,7 +33,6 @@ def rom_patcher(request):
                 patcher.source_rom_path = patcher.write_input_to_file(
                     request.FILES['source_file'], 'smw{}'.format(patcher.source_ext)
                 )
-
             else:
                 # 2a - source URL provided
                 logging.debug(form.cleaned_data['source_url'])
@@ -41,22 +40,19 @@ def rom_patcher(request):
                 patcher.source_rom_path = patcher.download_url_to_file(
                     form.cleaned_data['source_url'], 'smw{}'.format(patcher.source_ext)
                 )
-
             logger.debug('patcher.source_rom_path: {}'.format(patcher.source_rom_path))
 
             # 1 - PATCH FILE
-            if form.cleaned_data['patch_url']:
-                # 1b - patch URL provided
-                logger.debug(form.cleaned_data['patch_url'])
-                patcher.patch_file = patcher.download_rom(form.cleaned_data['patch_url'])
-
-            else:
+            if request.FILES['patch_file']:
                 # 1a - patch FILE provided
                 logger.debug(request.FILES['patch_file'])
                 patcher.patch_file = patcher.write_input_to_file(
                     request.FILES['patch_file'], request.FILES['patch_file'].name
                 )
-
+            else:
+                # 1b - patch URL provided
+                logger.debug(form.cleaned_data['patch_url'])
+                patcher.patch_file = patcher.download_rom(form.cleaned_data['patch_url'])
             logger.debug('patcher.patch_file: {}'.format(patcher.patch_file))
 
             new_rom_path = patcher.patch_rom(patcher.patch_file, patcher.source_ext)
