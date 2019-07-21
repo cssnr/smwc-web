@@ -44,6 +44,7 @@
 
                 <div class="card border-primary my-1">
                     <div class="card-body">
+                        <h5>Required - Patch File</h5>
                         <p>1a. Local patch file to apply (*.ips, *.bps, *.zip).</p>
                         <input id="patch_file" name="patch_file" type="file" class="mb-3">
                         <p>-- OR --</p>
@@ -51,7 +52,8 @@
                             <label for="patch_url">1b. URL to a patch file, zip file containing a patch file,
                                 or smwcentral.net hack page.</label>
                             <input type="text" class="form-control" id="patch_url" name="patch_url"
-                                   placeholder="https://www.smwcentral.net/?p=section&a=details&id=18791">
+                                   placeholder="https://www.smwcentral.net/?p=section&a=details&id=18791"
+                                   {% if 'source' in request.GET %}value="{{ request.GET.source }}"{% endif %}>
                         </div>
                     </div>
                 </div>
@@ -69,7 +71,8 @@
                 <div class="card border-primary my-1">
                     <div class="card-body">
                         <div class="form-group">
-                            <h5>Optional - Use Different Source</h5>
+                            <h5>Optional - Source ROM</h5>
+                            <p>Note: There is no need to use a source rom unless you prefer to use a local or custom source.</p>
                             <label for="source_url">2a. URL to a patch file, zip file containing a patch file,
                                 or smwcentral.net hack page.</label>
                             <input type="text" class="form-control" id="source_url" name="source_url"
