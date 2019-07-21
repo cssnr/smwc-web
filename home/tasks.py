@@ -66,6 +66,8 @@ def process_alert(hack_pk):
     message = 'New Hack: **{}**\nSMWC URL: {}'.format(hack.name, hack.get_hack_url())
     if hack.get_archive_url():
         message += '\nArchive URL: {}'.format(hack.get_archive_url())
+    if hack.get_patcher_url():
+        message += '\nPatcher URL: {}'.format(hack.get_patcher_url())
     if hack.difficulty:
         message += '\nDifficulty: **{}**'.format(hack.difficulty)
     if hack.length:

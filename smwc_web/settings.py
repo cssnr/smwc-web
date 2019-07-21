@@ -35,6 +35,7 @@ USE_TZ = True
 
 APP_ROMS_DIR = CONFIG['app']['roms_dir']
 APP_SITE_URL = CONFIG['app']['site_url']
+APP_PATCHER_URL = CONFIG['app']['patcher_url']
 APP_ROMS_URL = CONFIG['app']['roms_url']
 APP_SMWC_URL = CONFIG['app']['smwc_url']
 APP_MIN_HACK_ID = int(CONFIG['app']['min_hack_id'])

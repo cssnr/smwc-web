@@ -1,3 +1,4 @@
+from urllib.parse import quote_plus
 from django.conf import settings
 from django.db import models
 
@@ -46,6 +47,13 @@ class Hacks(models.Model):
                 return self.smwc_href
             else:
                 return settings.APP_SMWC_URL + self.smwc_href
+        else:
+            return None
+
+    def get_patcher_url(self):
+        hack_url = self.get_hack_url()
+        if hack_url:
+            return settings.APP_PATCHER_URL + '?source=' + quote_plus(hack_url)
         else:
             return None
 
