@@ -47,8 +47,8 @@ OAUTH_RESPONSE_TYPE = CONFIG['oauth']['response_type']
 OAUTH_GRANT_TYPE = CONFIG['oauth']['grant_type']
 OAUTH_SCOPE = CONFIG['oauth']['scope'].strip('"')
 
-CELERY_BROKER_URL = 'redis://localhost:6379'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_BROKER_URL = 'redis://:retropieviewerlevelcodes@localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://:retropieviewerlevelcodes@localhost:6379/0'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
