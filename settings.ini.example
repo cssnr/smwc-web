@@ -43,3 +43,6 @@ redirect_uri   = http://localhost/oauth/callback/
 response_type  = code
 grant_type     = authorization_code
 scope          = "identify webhook.incoming"
+
+[redis]
+broker_url     = redis://:retropieviewerlevelcodes@localhost:6379/0

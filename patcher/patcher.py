@@ -17,12 +17,17 @@ class RomPatcher(object):
     patch_pattern = '\.(bps|ips)$'
     archive_pattern = '\.(zip)$'
 
-    def __init__(self, source_rom):
+    def __init__(self):
         self.TempDir = tempfile.TemporaryDirectory(dir=self.tempdir_location)
         self.tempdir = self.TempDir.name
-        self.source_rom = self.write_input_to_file(source_rom, 'smw.sfc')
-        self.patch_name = None
-        self.output_file = None
+
+        self.source_ext = None
+        self.source_rom_path = None
+
+        self.patch_file = None
+
+        self.new_rom_name = None
+        self.new_rom_path = None
 
     def __repr__(self):
         return 'RomPatcher: {}'.format(self.tempdir)
@@ -30,13 +35,31 @@ class RomPatcher(object):
     def __str__(self):
         return str(self.__repr__)
 
-    def write_input_to_file(self, source_rom, file_name):
-        raw_file = source_rom.read()
+    def write_input_to_file(self, source_file, file_name):
+        raw_file = source_file.read()
         file_path = os.path.join(self.tempdir, os.path.basename(file_name))
         with open(file_path, 'wb+') as f:
             f.write(raw_file)
             f.close()
-            return file_path
+        return file_path
+
+    def download_url_to_file(self, url, file_name):
+        r = requests.get(url, verify=False, timeout=30)
+        if not r.ok:
+            r.raise_for_status()
+        file_path = os.path.join(self.tempdir, file_name)
+        with open(file_path, 'wb+') as f:
+            f.write(r.content)
+            f.close()
+        return file_path
+
+    @staticmethod
+    def get_file_extension(file_name):
+        source_name, source_ext = os.path.splitext(file_name)
+        if not source_ext:
+            source_ext = '.sfc'
+        logger.debug('source_ext: {}'.format(source_ext))
+        return source_ext
 
     def download_rom(self, rom_url):
         if not re.search(self.archive_pattern, rom_url, re.IGNORECASE) and \
@@ -54,15 +77,8 @@ class RomPatcher(object):
                 raise ValueError(error)
             rom_url = 'https:{}'.format(rom_uri)
 
-        r = requests.get(rom_url, verify=False, timeout=30)
-        if not r.ok:
-            r.raise_for_status()
-
-        patch_file = os.path.join(self.tempdir, os.path.basename(rom_url))
-        with open(patch_file, 'wb+') as f:
-            f.write(r.content)
-            f.close()
-        return patch_file
+        downloaded_file_path = self.download_url_to_file(rom_url, os.path.basename(rom_url))
+        return downloaded_file_path
 
     def patch_rom(self, patch_file, source_ext):
         if re.search(self.archive_pattern, patch_file, re.IGNORECASE):
@@ -71,21 +87,24 @@ class RomPatcher(object):
             archive.close()
             patch_file = self.find_first_file(self.tempdir, self.patch_pattern)
 
-        file_name = slugify(os.path.basename(re.split(self.patch_pattern, patch_file)[0]))
-        logger.info('file_name: {}'.format(file_name))
-        self.patch_name = '{}.{}'.format(file_name, source_ext.lstrip('.'))
-        logger.info('self.patch_name: {}'.format(self.patch_name))
-        self.output_file = os.path.join(self.tempdir, os.path.basename(self.patch_name))
-        logger.info('self.output_file: {}'.format(self.output_file))
+        new_file_name = slugify(os.path.basename(re.split(self.patch_pattern, patch_file)[0]))
+        logger.info('new_file_name: {}'.format(new_file_name))
+
+        self.new_rom_name = '{}.{}'.format(new_file_name, source_ext.lstrip('.'))
+        logger.info('self.new_rom_name: {}'.format(self.new_rom_name))
+
+        self.new_rom_path = os.path.join(self.tempdir, os.path.basename(self.new_rom_name))
+        logger.info('self.new_rom_path: {}'.format(self.new_rom_path))
 
         patch_command = [
-            self.flips, '--apply', patch_file, self.source_rom, self.output_file
+            self.flips, '--apply', patch_file, self.source_rom_path, self.new_rom_path
         ]
         if source_ext.lower() != '.smc':
             patch_command.insert(1, '--exact')
+
         call = subprocess.check_call(patch_command)
         logger.info('call: {}'.format(call))
-        return self.output_file
+        return self.new_rom_path
 
     @staticmethod
     def find_first_file(directory, pattern):

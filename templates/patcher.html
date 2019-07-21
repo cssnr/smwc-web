@@ -44,37 +44,48 @@
 
                 <div class="card border-primary my-1">
                     <div class="card-body">
-                            <p>1. Source Super Mario World ROM: Super Mario World (USA).sfc</p>
-                            <input id="source_rom" name="source_rom" type="file" class="mb-3" required>
+                        <h5>Required - Patch File</h5>
+                        <p>1a. Local patch file to apply (*.ips, *.bps, *.zip).</p>
+                        <input id="patch_file" name="patch_file" type="file" class="mb-3">
+                        <p>-- OR --</p>
+                        <div class="form-group">
+                            <label for="patch_url">1b. URL to a patch file, zip file containing a patch file,
+                                or smwcentral.net hack page.</label>
+                            <input type="text" class="form-control" id="patch_url" name="patch_url"
+                                   placeholder="https://www.smwcentral.net/?p=section&a=details&id=18791"
+                                   {% if 'source' in request.GET %}value="{{ request.GET.source }}"{% endif %}>
+                        </div>
                     </div>
                 </div>
 
+                <div class="progress mt-2">
+                    <div id="rom-status" class="progress-bar" role="progressbar"
+                         aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
+                </div>
+
+                <button id="patch-rom-btn" class="btn btn-lg btn-success my-2">
+                    Patch ROM <i id="search-icon" class="fas fa-sync ml-2"></i></button>
+
+                <div id="alerts-div"></div>
+
                 <div class="card border-primary my-1">
                     <div class="card-body">
-                        <p>2a. Local patch file to apply.</p>
-                        <input id="input_file" name="input_file" type="file" class="mb-3">
-                        <p>-- OR --</p>
                         <div class="form-group">
-                            <label for="input_patch">2b. URL to a patch file, zip file containing a patch file,
+                            <h5>Optional - Source ROM</h5>
+                            <p>Note: There is no need to use a source rom unless you prefer to use a local or custom source.</p>
+                            <label for="source_url">2a. URL to a patch file, zip file containing a patch file,
                                 or smwcentral.net hack page.</label>
-                            <input type="text" class="form-control" id="input_patch" name="input_patch"
-                                   placeholder="https://www.smwcentral.net/?p=section&a=details&id=18791">
+                            <input type="text" class="form-control" id="source_url" name="source_url"
+                                   value="https://github.com/videofindersTV/super-mario-world/raw/master/Super.Mario.World.1.smc">
                         </div>
+                        <p>-- OR --</p>
+                        <p>2b. Local Source Super Mario World ROM.</p>
+                        <input id="source_file" name="source_file" type="file" class="mb-3">
                     </div>
                 </div>
 
                 <button type="submit" hidden></button>
             </form>
-
-            <div class="progress mt-2">
-                <div id="rom-status" class="progress-bar" role="progressbar"
-                     aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
-            </div>
-
-            <button id="patch-rom-btn" class="btn btn-lg btn-success my-2">
-                Patch ROM <i id="search-icon" class="fas fa-sync ml-2"></i></button>
-
-            <div id="alerts-div"></div>
 
             <p class="mt-2">For more information, to report bugs or get support; join the
                 <a href="{% url 'home:discord' %}" target="_blank">SMWC.world Discord server</a>.</p>
