@@ -47,3 +47,6 @@ scope          = "identify webhook.incoming"
 
 [redis]
 broker_url     = redis://:retropieviewerlevelcodes@localhost:6379/0
+
+[bitly]
+access_token   = xxxxxxxx
