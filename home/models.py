@@ -50,15 +50,15 @@ class Hacks(models.Model):
         else:
             return None
 
-    def get_patcher_url(self):
-        hack_url = self.get_hack_url()
-        if hack_url:
-            return settings.APP_PATCHER_URL + '?patch=' + quote_plus(hack_url)
-        else:
-            return None
-
     def get_archive_url(self):
         if self.file_uri:
             return '{}/{}'.format(settings.APP_ROMS_URL, self.file_uri)
+        else:
+            return None
+
+    def get_patcher_url(self):
+        archive_url = self.get_archive_url()
+        if archive_url:
+            return settings.APP_PATCHER_URL + '?patch=' + quote_plus(archive_url)
         else:
             return None
