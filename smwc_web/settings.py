@@ -1,7 +1,5 @@
-import ast
 import os
-from celery.schedules import crontab
-from configparser import ConfigParser
+import configparser
 from distutils.util import strtobool
 
 settings_file = 'settings.ini'
@@ -10,7 +8,7 @@ ROOT_URLCONF = 'smwc_web.urls'
 WSGI_APPLICATION = 'smwc_web.wsgi.application'
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONFIG = ConfigParser()
+CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(BASE_DIR, settings_file))
 
 LOGIN_URL = '/oauth/'
@@ -55,18 +53,11 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_TIMEZONE = CONFIG['django']['time_zone']
-CELERY_BEAT_SCHEDULE = {
-    'every-ten-minutes': {
-        'task': 'process_hacks',
-        'schedule': crontab('*/10'),
-    },
-}
 
 STATSD_PREFIX = CONFIG.get('statsd', 'metric_prefix', fallback='smwcweb.dev')
 STATSD_PORT = CONFIG.getint('statsd', 'metric_port', fallback=8125)
 STATSD_HOST = CONFIG.get('statsd', 'metric_host', fallback='localhost')
 STATSD_CLIENT = CONFIG.get('statsd', 'metric_client', fallback='django_statsd.clients.toolbar')
-
 
 if DEBUG:
     DEBUG_TOOLBAR_PANELS = [
@@ -160,7 +151,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_celery_beat',
     'django_extensions',
     'django_statsd',
     'debug_toolbar',

@@ -1,7 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 import logging
 import shutil
-from celery import task
+from celery.decorators import task
 
 logger = logging.getLogger('celery')
 

@@ -10,7 +10,7 @@ from django_statsd.clients import statsd
 from django.conf import settings
 from django.utils.text import slugify
 from bs4 import BeautifulSoup
-from celery import task
+from celery.decorators import task
 from home.functions import get_short_url
 from home.models import Hacks, Webhooks
 
@@ -188,7 +188,7 @@ class SmwCentral(object):
             download = soup.find(string='Download')
             hack.download_url = 'https:{}'.format(download.findPrevious()['href'])
 
-            d = soup.find(string=re.compile('.*Difficulty:.*'))
+            d = soup.find(string=re.compile('.*Type:.*'))
             hack.difficulty = d.parent.parent.find(class_='cell2').text.strip()
 
             d = soup.find(string=re.compile('.*Authors:.*'))
