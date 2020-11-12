@@ -7,4 +7,5 @@
 *.log
 *.sqlite3
 settings.ini
+settings.env
 db.sqlite3

@@ -1,0 +1,14 @@
+bs4
+celery>=5,<6
+django>=3,<4
+django-debug-toolbar>=3,<4
+django-celery-beat
+django-extensions>=3,<4
+django-statsd-mozilla
+gunicorn
+mysqlclient
+python-memcached
+redis
+requests
+statsd
+Werkzeug

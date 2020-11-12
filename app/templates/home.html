@@ -1,0 +1,56 @@
+{% extends "main.html" %}
+{% block home_active %}active{% endblock %}
+{% block title %}Home{% endblock %}
+{% load static %}
+{% load home_tags %}
+
+{% block head %}{% endblock %}
+
+{% block body %}
+    <div class="row mt-2">
+        <div class="col">
+            <h1>SMW Central ROM Archive</h1>
+
+            <div class="alert alert-primary">
+                <strong>New Feature!</strong> Online ROM Patcher. Patch directly from the web browser,
+                <a href="{% url 'patcher:home' %}" class="alert-link">try it out here</a>.
+            </div>
+
+            <p class="lead">This tool downloads all Super Mario World ROM's that are uploaded to
+                <a href="https://www.smwcentral.net/" target="_blank">www.smwcentral.net</a> in the
+                <a href="https://www.smwcentral.net/?p=section&s=smwhacks&u=1" target="_blank">awaiting moderation</a>
+                section and archives them for <a href="{% url 'home:roms' %}">download</a>.</p>
+
+            <a href="{% url 'home:roms' %}" class="btn btn-success btn-lg my-2" role="button">View ROM Archive
+                <i class="fas fa-save"></i></a>
+
+            <ul class="mt-2">
+                <li>The above link takes you to the archive database. You may view the raw files
+                    <a href="{% get_config 'APP_ROMS_URL' %}" target="_blank">here</a>.</li>
+            </ul>
+
+            <p>Why? Because most of these submissions get rejected and are never seen again.
+                Most of them for a good reason, but for some of them that is not case.</p>
+
+            <p>This archive started on January 1, 2019 and does not contain hacks uploaded prior to this date.
+                For an archive of previous hacks try this third party site:
+                <a href="https://smwdb.me" target="_blank">https://smwdb.me</a> </p>
+
+            <h3>Discord Notifications</h3>
+
+            <p>This tool is designed to send a notification to Discord every
+                time a new Super Mario World ROM is posted for moderation on
+                <a href="https://www.smwcentral.net/?p=section&s=smwhacks" target="_blank">
+                    www.smwcentral.net</a>.</p>
+
+            <p>For more information, to report bugs or get support; join the
+                <a href="{% get_config 'APP_DISCORD_INVITE' %}" target="_blank">SMWC.world Discord server</a>.</p>
+
+            <a href="{% url 'oauth:login' %}" class="btn btn-info btn-lg my-2" role="button">Add Notifications to Discord
+                <i class="fab fa-discord"></i></a>
+            <div>
+                <img class="img-responsive img-thumbnail" src="{% static 'images/discord.jpg' %}">
+            </div>
+        </div>
+    </div>
+{% endblock %}
