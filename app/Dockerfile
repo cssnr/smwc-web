@@ -4,6 +4,7 @@ ENV TZ=America/Los_Angeles
 RUN apk add --update --no-cache \
     alpine-sdk \
     build-base \
+    mariadb-client \
     mysql-dev \
     python3-dev \
     tzdata

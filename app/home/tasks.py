@@ -138,16 +138,22 @@ def send_discord_message(url, message):
 def backup_hacks():
     logger.debug('backup_hacks: executed')
     tf = tempfile.NamedTemporaryFile(dir='/tmp')
+    df = tempfile.NamedTemporaryFile(dir='/tmp')
     logger.debug('tf.name: %s', tf.name)
     try:
         ts = int(datetime.datetime.now().timestamp())
         logger.debug('ts: %s', ts)
-        make_tarball(tf.name, settings.APP_ROMS_DIR, f'roms-{ts}')
+        mysql_dump(df.name)
+        tar = tarfile.open(tf.name, 'w:gz')
+        tar.add(settings.APP_ROMS_DIR, arcname=f'roms-{ts}')
+        tar.add(df.name, arcname=f"{settings.DATABASES['default']['NAME']}-{ts}.sql")
+        tar.close()
         ftp_upload_file(tf.name, settings.FTP_DIR, f'roms-{ts}.tar.gz')
         ftp_cleanup.delay()
     finally:
         logger.debug('backup_hacks: finally')
         tf.close()
+        df.close()
 
 
 @task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 3600})
@@ -185,9 +191,21 @@ def ftp_cleanup(directory=None, keep_files=10, ls_pattern=None):
         ftp.quit()
 
 
-def make_tarball(tarball_path, directory, tar_dir_name=None):
-    with tarfile.open(tarball_path, 'w:gz') as tar:
-        tar.add(directory, arcname=tar_dir_name or os.path.basename(directory))
+def mysql_dump(output_file_path):
+    import subprocess
+    command = 'mysqldump -h {} -u {} -p"{}" {} > {}'.format(
+        settings.DATABASES['default']['HOST'],
+        settings.DATABASES['default']['USER'],
+        settings.DATABASES['default']['PASSWORD'],
+        settings.DATABASES['default']['NAME'],
+        output_file_path,
+    )
+    result = subprocess.check_call(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    logger.debug(result)
+    if result != 0:
+        logger.error(result)
+        raise Exception('mysqldump error')
+    return result
 
 
 def ftp_upload_file(filepath, directory, remote_filename=None):
