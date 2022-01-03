@@ -60,7 +60,6 @@ FTP_DIR = config('FTP_DIR')
 FTP_KEEP_FILES = config('FTP_KEEP_FILES', '10')
 
 APP_ROMS_DIR = config('APP_ROMS_DIR')
-APP_TMP_DIR = config('APP_TMP_DIR')
 APP_FLIPS_PATH = config('APP_FLIPS_PATH')
 APP_SITE_URL = config('APP_SITE_URL').rstrip('/')
 APP_STATUS_URL = config('APP_STATUS_URL').rstrip('/')

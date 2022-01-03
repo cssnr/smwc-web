@@ -20,7 +20,7 @@ services:
         - "traefik.http.services.STACK_NAME.loadbalancer.server.scheme=http"
     volumes:
       - data_dir:/data
-      - static_dir:/data/static
+      - media_dir:/media
     secrets:
       - source: cssnr_basic_http_auth
         target: /etc/nginx/auth.users
@@ -39,7 +39,7 @@ services:
       mode: global
     volumes:
       - data_dir:/data
-      - static_dir:/data/static
+      - media_dir:/media
       - tmp_dir:/tmp
     networks:
       - net-internal
@@ -54,6 +54,7 @@ services:
       replicas: 1
     volumes:
       - data_dir:/data
+      - media_dir:/media
       - tmp_dir:/tmp
     networks:
       - net-internal
@@ -102,12 +103,12 @@ secrets:
 
 volumes:
   data_dir:
+  media_dir:
     driver: local
     driver_opts:
       type: nfs
       o: "addr=${NFS_HOST},rw"
       device: ":${NFS_DIRECTORY}"
-  static_dir:
   tmp_dir:
   flower_data:
   redis_data:
