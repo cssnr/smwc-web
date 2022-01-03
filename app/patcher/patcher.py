@@ -14,12 +14,11 @@ logger = logging.getLogger('app')
 
 class RomPatcher(object):
     flips = settings.APP_FLIPS_PATH
-    tempdir_location = settings.APP_TMP_DIR
     patch_pattern = '\.(bps|ips)$'
     archive_pattern = '\.(zip)$'
 
     def __init__(self):
-        self.TempDir = tempfile.TemporaryDirectory(dir=self.tempdir_location)
+        self.TempDir = tempfile.TemporaryDirectory(dir='/tmp')
         self.tempdir = self.TempDir.name
 
         self.source_ext = None

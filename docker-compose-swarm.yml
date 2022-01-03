@@ -38,6 +38,7 @@ services:
       mode: global
     volumes:
       - data_dir:/data
+      - tmp_dir:/tmp
     networks:
       - net-internal
     depends_on:
@@ -51,6 +52,7 @@ services:
       replicas: 1
     volumes:
       - data_dir:/data
+      - tmp_dir:/tmp
     networks:
       - net-internal
     depends_on:
@@ -103,6 +105,7 @@ volumes:
       type: nfs
       o: "addr=${NFS_HOST},rw"
       device: ":${NFS_DIRECTORY}"
+  tmp_dir:
   flower_data:
   redis_data:
 
