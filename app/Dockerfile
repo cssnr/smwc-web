@@ -9,9 +9,10 @@ RUN apk add --update --no-cache \
     python3-dev \
     tzdata
 
-WORKDIR /app
 RUN addgroup -g 1000 app && \
     adduser -S -H -h /app -s /sbin/nologin -u 1000 -G app app
+
+WORKDIR /app
 
 ADD --chown=app:app requirements.txt .
 RUN python -m pip install --no-cache-dir --upgrade pip && \

@@ -23,16 +23,13 @@
 {% block body %}
     <div class="row mt-2">
         <div class="col">
+
             <h1>ROM Patcher</h1>
 
-            {#<div class="alert alert-dismissible alert-primary">#}
-            {#    <strong>Note:</strong> this feature is currently in development. It may have bugs and receive frequent updates.#}
-            {#</div>#}
-
             <ol>
-                <li>Select the unmodified source Super Mario World ROM from your computer.</li>
                 <li>Choose a remote patch file, zip containing a patch file, or a Super Mario World ROM URL link from
                     <a href="https://www.smwcentral.net/?p=section&s=smwhacks" target="_blank">www.smwcentral.net</a>.</li>
+                <li>Optional: Select the unmodified source Super Mario World ROM from your computer.</li>
             </ol>
 
             <p>Demo: To watch a .gif (video) on how this tool works
@@ -91,10 +88,6 @@
             <p class="mt-2">For more information, to report bugs or get support; join the
                 <a href="{% get_config 'APP_DISCORD_INVITE' %}" target="_blank">SMWC.world Discord server</a>.</p>
 
-            {#<h3 class="mt-4">Downloadable Version</h3>#}
-            {#<p>This ROM Patcher is also available for download on Windows and Linux for even faster patching with saved preferences.</p>#}
-            {#<p>View it on GitHub: <a href="https://github.com/smashedr/rom-patcher" target="_blank">#}
-            {#    https://github.com/smashedr/rom-patcher</a> </p>#}
         </div>
     </div>
 {% endblock %}

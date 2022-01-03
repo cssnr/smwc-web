@@ -14,14 +14,14 @@ from django.core.cache import cache
 from django.core.cache.utils import make_template_fragment_key
 from django.utils.text import slugify
 from bs4 import BeautifulSoup
-from celery.decorators import task
+from celery import shared_task
 from home.models import Hacks, Webhooks
 
 logger = logging.getLogger('app')
 urllib3.disable_warnings()
 
 
-@task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 1, 'countdown': 240})
+@shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 1, 'countdown': 240})
 def process_hacks():
     logger.debug('process_hacks: executed')
     waiting, r = SmwCentral.get_waiting()
@@ -74,7 +74,7 @@ def process_hacks():
     return 'Processed {} hacks with {} errors.'.format(len(waiting), errors)
 
 
-@task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 60}, rate_limit='10/m')
+@shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 60}, rate_limit='10/m')
 def process_alert(hack_pk):
     hack = Hacks.objects.get(pk=hack_pk)
     message = gen_discord_message(hack)
@@ -91,7 +91,7 @@ def process_alert(hack_pk):
         send_alert.delay(hook.id, message)
 
 
-@task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 60})
+@shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 60})
 def send_alert(hook_pk, message):
     try:
         hook = Webhooks.objects.get(pk=hook_pk)
@@ -117,7 +117,7 @@ def send_alert(hook_pk, message):
         raise
 
 
-@task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 60})
+@shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 60})
 def send_discord_message(url, message):
     try:
         body = {'content': message}
@@ -134,7 +134,7 @@ def send_discord_message(url, message):
         raise
 
 
-@task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 3600})
+@shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 3600})
 def backup_hacks():
     logger.debug('backup_hacks: executed')
     tf = tempfile.NamedTemporaryFile(dir='/tmp')
@@ -156,7 +156,7 @@ def backup_hacks():
         df.close()
 
 
-@task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 3600})
+@shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 3600})
 def ftp_cleanup(directory=None, keep_files=10, ls_pattern=None):
     logger.debug('ftp_cleanup: executed')
 

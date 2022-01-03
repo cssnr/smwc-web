@@ -41,15 +41,17 @@ services:
     volumes:
       - data_dir:/data
     depends_on:
+      - redis
       - app
 
   beat:
     image: registry.hosted-domains.com/shane/smwc-web-app:${VERSION}
     env_file: ${ENV_FILE}
-    command: "celery -A smwc_web beat -l INFO -S django_celery_beat.schedulers:DatabaseScheduler"
+    command: "celery -A smwc_web beat -l INFO -S django"
     deploy:
       replicas: 1
     depends_on:
+      - redis
       - app
 
   flower:
@@ -69,12 +71,6 @@ services:
       replicas: 1
     volumes:
       - redis_data:/data
-
-  memcached:
-    image: memcached:alpine
-    command: "memcached -I 4M"
-    deploy:
-      replicas: 1
 
 secrets:
   cssnr.com.crt:

@@ -1,6 +1,8 @@
 import os
+import sentry_sdk
 from celery.schedules import crontab
-from distutils.util import strtobool
+from decouple import config
+from sentry_sdk.integrations.django import DjangoIntegration
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROOT_URLCONF = 'smwc_web.urls'
@@ -13,59 +15,59 @@ MEDIA_URL = '/media/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 TEMPLATES_DIRS = [os.path.join(BASE_DIR, 'templates')]
 
-SESSION_COOKIE_AGE = int(os.getenv('SESSION_COOKIE_AGE', 3600 * 24 * 14))
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(' ')
-DEBUG = strtobool(os.getenv('DEBUG', 'False'))
-SECRET_KEY = os.environ['SECRET_KEY']
-STATIC_ROOT = os.environ['STATIC_ROOT']
-MEDIA_ROOT = os.environ['MEDIA_ROOT']
+SESSION_COOKIE_AGE = config('SESSION_COOKIE_AGE', 3600 * 24 * 14, cast=int)
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', '*').split()
+DEBUG = config('DEBUG', 'False', cast=bool)
+SECRET_KEY = config('SECRET_KEY')
+STATIC_ROOT = config('STATIC_ROOT')
+MEDIA_ROOT = config('MEDIA_ROOT')
 
-LANGUAGE_CODE = os.getenv('LANGUAGE_CODE', 'en-us')
-DATETIME_FORMAT = os.getenv('DATETIME_FORMAT', 'N j, Y, f A')
-TIME_ZONE = os.getenv('TZ', 'America/Los_Angeles')
-USE_TZ = strtobool(os.getenv('USE_TZ', 'True'))
+LANGUAGE_CODE = config('LANGUAGE_CODE', 'en-us')
+DATETIME_FORMAT = config('DATETIME_FORMAT', 'N j, Y, f A')
+TIME_ZONE = config('TZ', 'America/Los_Angeles')
+USE_TZ = config('USE_TZ', 'True', cast=bool)
 
 USE_I18N = True
 USE_L10N = True
 
-USE_X_FORWARDED_HOST = strtobool(os.getenv('USE_X_FORWARDED_HOST', 'False'))
-SECURE_REFERRER_POLICY = os.getenv('SECURE_REFERRER_POLICY', 'no-referrer')
-# SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+USE_X_FORWARDED_HOST = config('USE_X_FORWARDED_HOST', 'False', cast=bool)
+SECURE_REFERRER_POLICY = config('SECURE_REFERRER_POLICY', 'no-referrer')
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
-OAUTH_CLIENT_ID = os.getenv('OAUTH_CLIENT_ID')
-OAUTH_CLIENT_SECRET = os.getenv('OAUTH_CLIENT_SECRET')
-OAUTH_REDIRECT_URI = os.getenv('OAUTH_REDIRECT_URI')
-OAUTH_SCOPE = os.getenv('OAUTH_SCOPE')
+OAUTH_CLIENT_ID = config('OAUTH_CLIENT_ID')
+OAUTH_CLIENT_SECRET = config('OAUTH_CLIENT_SECRET')
+OAUTH_REDIRECT_URI = config('OAUTH_REDIRECT_URI')
+OAUTH_SCOPE = config('OAUTH_SCOPE')
 OAUTH_RESPONSE_TYPE = 'code'
 OAUTH_GRANT_TYPE = 'authorization_code'
 
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_RESULT_BACKEND = os.environ['CELERY_RESULT_BACKEND']
-CELERY_TIMEZONE = os.getenv('TZ', 'America/Los_Angeles')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
+CELERY_TIMEZONE = config('TZ', 'America/Los_Angeles')
 
-STATSD_PREFIX = os.getenv('STATSD_PREFIX', 'smwcweb.dev')
-STATSD_PORT = int(os.getenv('STATSD_PORT', '8125'))
-STATSD_HOST = os.getenv('STATSD_HOST', 'localhost')
-STATSD_CLIENT = os.getenv('STATSD_CLIENT', 'django_statsd.clients.normal')
+STATSD_PREFIX = config('STATSD_PREFIX', 'smwcweb.dev')
+STATSD_PORT = config('STATSD_PORT', '8125', cast=int)
+STATSD_HOST = config('STATSD_HOST', 'localhost')
+STATSD_CLIENT = config('STATSD_CLIENT', 'django_statsd.clients.normal')
 
-BITLY_ACCESS_TOKEN = os.environ['BITLY_ACCESS_TOKEN']
+BITLY_ACCESS_TOKEN = config('BITLY_ACCESS_TOKEN')
 
-FTP_HOST = os.getenv('FTP_HOST')
-FTP_USER = os.getenv('FTP_USER')
-FTP_PASS = os.getenv('FTP_PASS')
-FTP_DIR = os.getenv('FTP_DIR')
-FTP_KEEP_FILES = os.getenv('FTP_KEEP_FILES', '10')
+FTP_HOST = config('FTP_HOST')
+FTP_USER = config('FTP_USER')
+FTP_PASS = config('FTP_PASS')
+FTP_DIR = config('FTP_DIR')
+FTP_KEEP_FILES = config('FTP_KEEP_FILES', '10')
 
-APP_ROMS_DIR = os.environ['APP_ROMS_DIR']
-APP_TMP_DIR = os.environ['APP_TMP_DIR']
-APP_FLIPS_PATH = os.environ['APP_FLIPS_PATH']
-APP_SITE_URL = os.environ['APP_SITE_URL'].rstrip('/')
-APP_STATUS_URL = os.environ['APP_STATUS_URL'].rstrip('/')
-APP_PATCHER_URL = os.environ['APP_PATCHER_URL'].rstrip('/')
-APP_ROMS_URL = os.environ['APP_ROMS_URL'].rstrip('/')
-APP_SMWC_URL = os.environ['APP_SMWC_URL'].rstrip('/')
-APP_DISCORD_INVITE = os.environ['APP_DISCORD_INVITE']
+APP_ROMS_DIR = config('APP_ROMS_DIR')
+APP_TMP_DIR = config('APP_TMP_DIR')
+APP_FLIPS_PATH = config('APP_FLIPS_PATH')
+APP_SITE_URL = config('APP_SITE_URL').rstrip('/')
+APP_STATUS_URL = config('APP_STATUS_URL').rstrip('/')
+APP_PATCHER_URL = config('APP_PATCHER_URL').rstrip('/')
+APP_ROMS_URL = config('APP_ROMS_URL').rstrip('/')
+APP_SMWC_URL = config('APP_SMWC_URL').rstrip('/')
+APP_DISCORD_INVITE = config('APP_DISCORD_INVITE')
 APP_MIN_HACK_ID = 18000
 
 CELERY_BEAT_SCHEDULE = {
@@ -79,20 +81,19 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
-CACHES = {
-    'default': {
-        'BACKEND': os.getenv('CACHE_BACKEND',
-                             'django.core.cache.backends.locmem.LocMemCache'),
-        'LOCATION': os.getenv('CACHE_LOCATION', 'memcached:11211'),
-        'OPTIONS': {
-            'server_max_value_length': 1024 * 1024 * 4,
-        }
-    }
-}
+if config('SENTRY_URL', False):
+    sentry_sdk.init(
+        dsn=config('SENTRY_URL'),
+        environment=config('SENTRY_ENVIRONMENT'),
+        integrations=[DjangoIntegration()],
+        send_default_pii=True,
+        debug=config('SENTRY_DEBUG', False, cast=bool),
+    )
 
 if DEBUG:
     def show_toolbar(request):
         return True if request.user.is_staff else False
+
     DEBUG_TOOLBAR_CONFIG = {'SHOW_TOOLBAR_CALLBACK': show_toolbar}
     DEBUG_TOOLBAR_PANELS = [
         'debug_toolbar.panels.versions.VersionsPanel',
@@ -111,14 +112,25 @@ if DEBUG:
     if 'django_statsd.clients.toolbar' in STATSD_CLIENT:
         DEBUG_TOOLBAR_PANELS.append('django_statsd.panel.StatsdPanel')
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': config('CACHE_LOCATION'),
+        'OPTIONS': {
+            'PASSWORD': os.environ.get('CELERY_REDIS_PASSWORD'),
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+    },
+}
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ['DATABASE_NAME'],
-        'USER': os.environ['DATABASE_USER'],
-        'PASSWORD': os.environ['DATABASE_PASS'],
-        'HOST': os.environ['DATABASE_HOST'],
-        'PORT': os.environ['DATABASE_PORT'],
+        'NAME': config('DATABASE_NAME'),
+        'USER': config('DATABASE_USER'),
+        'PASSWORD': config('DATABASE_PASS'),
+        'HOST': config('DATABASE_HOST'),
+        'PORT': config('DATABASE_PORT'),
         'OPTIONS': {
             'isolation_level': 'repeatable read',
             'init_command': "SET sql_mode='STRICT_ALL_TABLES'",
@@ -146,17 +158,17 @@ LOGGING = {
     },
     'root': {
         'handlers': ['console'],
-        'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+        'level': config('DJANGO_LOG_LEVEL', 'INFO'),
     },
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'level': config('DJANGO_LOG_LEVEL', 'INFO'),
             'propagate': True,
         },
         'app': {
             'handlers': ['console'],
-            'level': os.getenv('APP_LOG_LEVEL', 'DEBUG'),
+            'level': config('APP_LOG_LEVEL', 'DEBUG'),
             'propagate': True,
         },
     },
