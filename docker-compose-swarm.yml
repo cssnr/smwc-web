@@ -25,6 +25,7 @@ services:
         target: /etc/nginx/auth.users
     networks:
       - traefik-public
+      - static_dir:/data/static
       - net-internal
     depends_on:
       - app
@@ -38,6 +39,7 @@ services:
       mode: global
     volumes:
       - data_dir:/data
+      - static_dir:/data/static
       - tmp_dir:/tmp
     networks:
       - net-internal
@@ -105,6 +107,7 @@ volumes:
       type: nfs
       o: "addr=${NFS_HOST},rw"
       device: ":${NFS_DIRECTORY}"
+  static_dir:
   tmp_dir:
   flower_data:
   redis_data:
