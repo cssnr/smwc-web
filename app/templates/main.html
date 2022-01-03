@@ -4,13 +4,11 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <!-- Required tags for bootstrap -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     {% get_config "DEBUG" as debug_enabled %}
     {% if debug_enabled %}<meta name="robots" content="noindex, nofollow">{% endif %}
 
-    <!-- Meta -->
     {% block meta %}
         <meta name="author" content="Shane"/>
         <meta name="title" content="SMW Central ROM Archive"/>
@@ -27,7 +25,6 @@
 
     <title>SMW Central ROM Archive - {% block title %}{% endblock %}</title>
 
-    <!-- Media -->
     <link rel="icon" href="{% static 'images/favicon.ico' %}">
 
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
@@ -38,7 +35,6 @@
 </head>
 <body>
 
-<!-- Main content -->
 <div class="container-fluid">
     {% block heading %}
         <div class="row">
@@ -89,7 +85,7 @@
             <div class="col">
                 {% if messages %}
                     {% for message in messages %}
-                        <div class="alert alert-{{ message.extra_tags }} alert-dismissible my-1" role="alert">
+                        <div class="alert alert-{{ message.tags|tag_to_class }} alert-dismissible my-1" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                 <span aria-hidden="true">&times;</span></button>
                             {{ message.message|safe }}
@@ -123,7 +119,6 @@
     </form>
 {% endif %}
 
-<!-- JS imported at end to improve page loads -->
 <script type="text/javascript" src="{% static 'jquery/jquery.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'popper/popper.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>

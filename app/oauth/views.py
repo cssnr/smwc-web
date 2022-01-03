@@ -59,17 +59,18 @@ def callback(request):
             channel_id=oauth_response['webhook']['channel_id'],
         )
         webhook.save()
-        success_message = ('Webhook successfully added. '
-                           'New rom-hacks will show up here as they are posted. '
-                           'To browse the archive visit: {}').format(settings.APP_SITE_URL)
-        send_discord_message.delay(oauth_response['webhook']['url'], success_message)
+        msg = (
+            f'Webhook successfully added. New rom-hacks will show up here as they '
+            f'are posted. To browse the archive visit: {settings.APP_SITE_URL}'
+        )
+        send_discord_message.delay(oauth_response['webhook']['url'], msg)
         statsd.incr('oauth.callback.success.')
-        message(request, 'success', 'Operation Successful!')
+        messages.success(request, 'Operation Successful')
         return redirect('home:index')
     except Exception as error:
         statsd.incr('oauth.callback.errors.')
         logger.exception(error)
-        message(request, 'danger', 'Fatal Login Auth. Report as Bug.')
+        messages.error(request, 'Fatal Login Auth. Report as Bug')
         return redirect('home:index')
 
 
@@ -79,7 +80,7 @@ def log_out(request):
     View  /oauth/logout/
     """
     logout(request)
-    message(request, 'success', 'You have logged out.')
+    messages.success(request, 'You have logged out.')
     return redirect('home:index')
 
 
@@ -116,13 +117,3 @@ def get_discord(access_token):
     logger.debug('status_code: {}'.format(r.status_code))
     logger.debug('content: {}'.format(r.content))
     return r.json()
-
-
-def message(request, level, message):
-    """
-    Easily add a success or error message
-    """
-    if level == 'success':
-        messages.add_message(request, messages.SUCCESS, message, extra_tags='success')
-    else:
-        messages.add_message(request, messages.WARNING, message, extra_tags=level)

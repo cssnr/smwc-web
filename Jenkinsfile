@@ -4,19 +4,17 @@
 
 pipeline {
     agent {
-        label 'manager'
+        label 'jenkins-slave-docker'
     }
     options {
         buildDiscarder(logRotator(numToKeepStr:'5'))
         timeout(time: 1, unit: 'HOURS')
     }
     environment {
+        DISCORD_ID = "discord-hook-smashed"
+        COMPOSE_FILE = "docker-compose-swarm.yml"
         NFS_BASE = "/export/ftpbackup/ns504588.ip-192-99-100.net/docker/nfs"
         NFS_HOST = "ftpback-bhs1-5.ip-198-100-151.net"
-        DEV_PORT = '10133'
-        PROD_PORT = '10134'
-        DISCORD_ID = "smashed-alerts"
-        COMPOSE_FILE = "docker-compose-swarm.yml"
 
         BUILD_CAUSE = getBuildCause()
         VERSION = getVersion("${GIT_BRANCH}")
@@ -49,18 +47,20 @@ pipeline {
                 }
             }
             environment {
-                ENV_FILE = "deploy-configs/services/${SERVICE_NAME}/dev.env"
-                STACK_NAME = "dev_${BASE_NAME}"
-                DOCKER_PORT = "${DEV_PORT}"
+                ENV = "dev"
+                ENV_FILE = "service-configs/services/${SERVICE_NAME}/${ENV}.env"
+                STACK_NAME = "${ENV}_${BASE_NAME}"
                 NFS_DIRECTORY = "${NFS_BASE}/${STACK_NAME}"
+                TRAEFIK_HOST = "`dev.smwc.world`, `roms-dev.smwc.world`"
             }
             steps {
                 echo "\n--- Starting Dev Deploy ---\n" +
                         "STACK_NAME:    ${STACK_NAME}\n" +
-                        "DOCKER_PORT:   ${DOCKER_PORT}\n" +
+                        "TRAEFIK_HOST:  ${TRAEFIK_HOST}\n" +
                         "NFS_DIRECTORY: ${NFS_DIRECTORY}\n" +
                         "ENV_FILE:      ${ENV_FILE}\n"
                 sendDiscord("${DISCORD_ID}", "Dev Deploy Started")
+                updateCompose("${COMPOSE_FILE}", "STACK_NAME", "${STACK_NAME}")
                 stackPush("${COMPOSE_FILE}")
                 stackDeploy("${COMPOSE_FILE}", "${STACK_NAME}")
                 sendDiscord("${DISCORD_ID}", "Dev Deploy Finished")
@@ -74,18 +74,20 @@ pipeline {
                 }
             }
             environment {
-                ENV_FILE = "deploy-configs/services/${SERVICE_NAME}/prod.env"
-                STACK_NAME = "prod_${BASE_NAME}"
-                DOCKER_PORT = "${PROD_PORT}"
+                ENV = "prod"
+                ENV_FILE = "service-configs/services/${SERVICE_NAME}/${ENV}.env"
+                STACK_NAME = "${ENV}_${BASE_NAME}"
                 NFS_DIRECTORY = "${NFS_BASE}/${STACK_NAME}"
+                TRAEFIK_HOST = "`smwc.world`, `roms.smwc.world`"
             }
             steps {
                 echo "\n--- Starting Prod Deploy ---\n" +
                         "STACK_NAME:    ${STACK_NAME}\n" +
-                        "DOCKER_PORT:   ${DOCKER_PORT}\n" +
+                        "TRAEFIK_HOST:  ${TRAEFIK_HOST}\n" +
                         "NFS_DIRECTORY: ${NFS_DIRECTORY}\n" +
                         "ENV_FILE:      ${ENV_FILE}\n"
                 sendDiscord("${DISCORD_ID}", "Prod Deploy Started")
+                updateCompose("${COMPOSE_FILE}", "STACK_NAME", "${STACK_NAME}")
                 stackPush("${COMPOSE_FILE}")
                 stackDeploy("${COMPOSE_FILE}", "${STACK_NAME}")
                 sendDiscord("${DISCORD_ID}", "Prod Deploy Finished")
