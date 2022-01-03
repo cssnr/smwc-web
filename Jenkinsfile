@@ -13,8 +13,6 @@ pipeline {
     environment {
         DISCORD_ID = "discord-hook-smashed"
         COMPOSE_FILE = "docker-compose-swarm.yml"
-        NFS_BASE = "/export/ftpbackup/ns504588.ip-192-99-100.net/docker/nfs"
-        NFS_HOST = "ftpback-bhs1-5.ip-198-100-151.net"
 
         BUILD_CAUSE = getBuildCause()
         VERSION = getVersion("${GIT_BRANCH}")
@@ -23,6 +21,9 @@ pipeline {
 
         BASE_NAME = "${GIT_ORG}-${GIT_REPO}"
         SERVICE_NAME = "${BASE_NAME}"
+
+        NFS_HOST = "nfs01.cssnr.com"
+        NFS_BASE = "/data/docker"
     }
     stages {
         stage('Init') {
@@ -60,6 +61,7 @@ pipeline {
                         "NFS_DIRECTORY: ${NFS_DIRECTORY}\n" +
                         "ENV_FILE:      ${ENV_FILE}\n"
                 sendDiscord("${DISCORD_ID}", "Dev Deploy Started")
+                setupNfs("${STACK_NAME}")
                 updateCompose("${COMPOSE_FILE}", "STACK_NAME", "${STACK_NAME}")
                 stackPush("${COMPOSE_FILE}")
                 stackDeploy("${COMPOSE_FILE}", "${STACK_NAME}")
@@ -87,6 +89,7 @@ pipeline {
                         "NFS_DIRECTORY: ${NFS_DIRECTORY}\n" +
                         "ENV_FILE:      ${ENV_FILE}\n"
                 sendDiscord("${DISCORD_ID}", "Prod Deploy Started")
+                setupNfs("${STACK_NAME}")
                 updateCompose("${COMPOSE_FILE}", "STACK_NAME", "${STACK_NAME}")
                 stackPush("${COMPOSE_FILE}")
                 stackDeploy("${COMPOSE_FILE}", "${STACK_NAME}")
