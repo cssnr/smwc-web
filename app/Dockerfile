@@ -19,5 +19,5 @@ RUN python -m pip install --no-cache-dir --upgrade pip && \
 RUN mkdir -p /app /data && chown app:app /app /data
 COPY --chown=app:app . .
 
-# USER app
+USER app
 ENTRYPOINT ["sh", "docker-entrypoint.sh"]

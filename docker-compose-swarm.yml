@@ -49,6 +49,8 @@ services:
     command: "celery -A smwc_web worker -l INFO -c 2"
     deploy:
       replicas: 1
+    volumes:
+      - data_dir:/data
     networks:
       - net-internal
     depends_on:
