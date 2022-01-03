@@ -16,7 +16,7 @@ COPY --chown=app:app requirements.txt .
 RUN python -m pip install --no-cache-dir --upgrade pip && \
     python -m pip install --no-cache-dir -r requirements.txt
 
-RUN mkdir -p /app /data && chown app:app /app /data
+RUN mkdir -p /app /data /data/static && chown app:app /app /data /data/static
 COPY --chown=app:app . .
 
 USER app
