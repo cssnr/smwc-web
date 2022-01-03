@@ -1,10 +1,8 @@
 FROM python:3.8-alpine
-ENV TZ=America/Los_Angeles
 
 RUN apk add --update --no-cache \
     alpine-sdk \
     build-base \
-    mariadb-client \
     mysql-dev \
     python3-dev \
     tzdata
@@ -21,5 +19,5 @@ RUN python -m pip install --no-cache-dir --upgrade pip && \
 RUN mkdir -p /app /data && chown app:app /app /data
 ADD --chown=app:app . .
 
-USER app
+# USER app
 ENTRYPOINT ["sh", "docker-entrypoint.sh"]
