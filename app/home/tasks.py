@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup
 from celery import shared_task
 from home.models import Hacks, Webhooks
 
-logger = logging.getLogger('app')
+logger = logging.getLogger('celery')
 urllib3.disable_warnings()
 
 
