@@ -20,12 +20,12 @@ services:
         - "traefik.http.services.STACK_NAME.loadbalancer.server.scheme=http"
     volumes:
       - data_dir:/data
+      - static_dir:/data/static
     secrets:
       - source: cssnr_basic_http_auth
         target: /etc/nginx/auth.users
     networks:
       - traefik-public
-      - static_dir:/data/static
       - net-internal
     depends_on:
       - app
