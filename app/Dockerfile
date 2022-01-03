@@ -12,12 +12,12 @@ RUN addgroup -g 1000 app && \
 
 WORKDIR /app
 
-ADD --chown=app:app requirements.txt .
+COPY --chown=app:app requirements.txt .
 RUN python -m pip install --no-cache-dir --upgrade pip && \
     python -m pip install --no-cache-dir -r requirements.txt
 
 RUN mkdir -p /app /data && chown app:app /app /data
-ADD --chown=app:app . .
+COPY --chown=app:app . .
 
 # USER app
 ENTRYPOINT ["sh", "docker-entrypoint.sh"]
