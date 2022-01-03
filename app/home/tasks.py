@@ -296,7 +296,7 @@ class SmwCentral(object):
             return smwc_id
 
         except Exception as error:
-            logger.debug(error)
+            logger.info(error)
             return False
 
     @staticmethod

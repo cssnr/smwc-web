@@ -77,4 +77,4 @@ def patcher_view(request):
     except Exception as error:
         logger.exception(error)
         statsd.incr('patcher.rom_patcher.error')
-        return JsonResponse({'error': error}, status=400)
+        return JsonResponse({'error': str(error)}, status=400)
