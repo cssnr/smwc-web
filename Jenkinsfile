@@ -21,9 +21,6 @@ pipeline {
 
         BASE_NAME = "${GIT_ORG}-${GIT_REPO}"
         SERVICE_NAME = "${BASE_NAME}"
-
-        NFS_HOST = "nfs01.cssnr.com"
-        NFS_BASE = "/data/docker"
     }
     stages {
         stage('Init') {
@@ -51,17 +48,14 @@ pipeline {
                 ENV = "dev"
                 ENV_FILE = "service-configs/services/${SERVICE_NAME}/${ENV}.env"
                 STACK_NAME = "${ENV}_${BASE_NAME}"
-                NFS_DIRECTORY = "${NFS_BASE}/${STACK_NAME}"
                 TRAEFIK_HOST = "`dev.smwc.world`, `roms-dev.smwc.world`"
             }
             steps {
                 echo "\n--- Starting Dev Deploy ---\n" +
                         "STACK_NAME:    ${STACK_NAME}\n" +
                         "TRAEFIK_HOST:  ${TRAEFIK_HOST}\n" +
-                        "NFS_DIRECTORY: ${NFS_DIRECTORY}\n" +
                         "ENV_FILE:      ${ENV_FILE}\n"
                 sendDiscord("${DISCORD_ID}", "Dev Deploy Started")
-                setupNfs("${STACK_NAME}")
                 updateCompose("${COMPOSE_FILE}", "STACK_NAME", "${STACK_NAME}")
                 stackPush("${COMPOSE_FILE}")
                 stackDeploy("${COMPOSE_FILE}", "${STACK_NAME}")
@@ -79,17 +73,14 @@ pipeline {
                 ENV = "prod"
                 ENV_FILE = "service-configs/services/${SERVICE_NAME}/${ENV}.env"
                 STACK_NAME = "${ENV}_${BASE_NAME}"
-                NFS_DIRECTORY = "${NFS_BASE}/${STACK_NAME}"
                 TRAEFIK_HOST = "`smwc.world`, `roms.smwc.world`"
             }
             steps {
                 echo "\n--- Starting Prod Deploy ---\n" +
                         "STACK_NAME:    ${STACK_NAME}\n" +
                         "TRAEFIK_HOST:  ${TRAEFIK_HOST}\n" +
-                        "NFS_DIRECTORY: ${NFS_DIRECTORY}\n" +
                         "ENV_FILE:      ${ENV_FILE}\n"
                 sendDiscord("${DISCORD_ID}", "Prod Deploy Started")
-                setupNfs("${STACK_NAME}")
                 updateCompose("${COMPOSE_FILE}", "STACK_NAME", "${STACK_NAME}")
                 stackPush("${COMPOSE_FILE}")
                 stackDeploy("${COMPOSE_FILE}", "${STACK_NAME}")

@@ -1,8 +1,9 @@
 import os
 import sentry_sdk
 from celery.schedules import crontab
-from decouple import config
+from decouple import config, Csv
 from sentry_sdk.integrations.django import DjangoIntegration
+# import django_statsd
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROOT_URLCONF = 'smwc_web.urls'
@@ -34,6 +35,9 @@ USE_X_FORWARDED_HOST = config('USE_X_FORWARDED_HOST', 'False', cast=bool)
 SECURE_REFERRER_POLICY = config('SECURE_REFERRER_POLICY', 'no-referrer')
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+CSRF_TRUSTED_ORIGINS = config('CSRF_ORIGINS', 'https://intranet.cssnr.com', Csv())
+
 OAUTH_CLIENT_ID = config('OAUTH_CLIENT_ID')
 OAUTH_CLIENT_SECRET = config('OAUTH_CLIENT_SECRET')
 OAUTH_REDIRECT_URI = config('OAUTH_REDIRECT_URI')
@@ -49,7 +53,7 @@ CELERY_TIMEZONE = config('TZ', 'America/Los_Angeles')
 STATSD_PREFIX = config('STATSD_PREFIX', 'smwcweb.dev')
 STATSD_PORT = config('STATSD_PORT', '8125', cast=int)
 STATSD_HOST = config('STATSD_HOST', 'localhost')
-STATSD_CLIENT = config('STATSD_CLIENT', 'django_statsd.clients.normal')
+# STATSD_CLIENT = config('STATSD_CLIENT', 'django_statsd')
 
 BITLY_ACCESS_TOKEN = config('BITLY_ACCESS_TOKEN')
 
@@ -109,8 +113,8 @@ if DEBUG:
         'debug_toolbar.panels.logging.LoggingPanel',
         'debug_toolbar.panels.redirects.RedirectsPanel',
     ]
-    if 'django_statsd.clients.toolbar' in STATSD_CLIENT:
-        DEBUG_TOOLBAR_PANELS.append('django_statsd.panel.StatsdPanel')
+    # if 'django_statsd.clients.toolbar' in STATSD_CLIENT:
+    #     DEBUG_TOOLBAR_PANELS.append('django_statsd.panel.StatsdPanel')
 
 CACHES = {
     'default': {
@@ -183,7 +187,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_celery_beat',
     'django_extensions',
-    'django_statsd',
+    # 'django_statsd',
     'debug_toolbar',
     'home',
     'oauth',
@@ -191,6 +195,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # 'django_statsd.middleware.StatsdMiddleware ',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

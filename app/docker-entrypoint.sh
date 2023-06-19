@@ -2,7 +2,7 @@
 
 set -ex
 
-if [ "${@:0:3}" = "gun" ];then
+if [ "${*:0:3}" = "gun" ];then
   python manage.py collectstatic --noinput
 fi
 

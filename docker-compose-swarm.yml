@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   nginx:
-    build: ./nginx
+    build:
+      context: ./nginx
+      network: host
     image: registry.hosted-domains.com/shane/smwc-web-nginx:${VERSION}
     deploy:
       mode: global
@@ -19,7 +21,7 @@ services:
         - "traefik.http.services.STACK_NAME.loadbalancer.server.port=80"
         - "traefik.http.services.STACK_NAME.loadbalancer.server.scheme=http"
     volumes:
-      - data_dir:/data
+      - /data/docker/smwc-web:/data
     secrets:
       - source: cssnr_basic_http_auth
         target: /etc/nginx/auth.users
@@ -30,14 +32,16 @@ services:
       - app
 
   app:
-    build: ./app
+    build:
+      context: ./app
+      network: host
     image: registry.hosted-domains.com/shane/smwc-web-app:${VERSION}
     env_file: ${ENV_FILE}
     command: "gunicorn smwc_web.wsgi:application -w 2 -b 0.0.0.0:9000"
     deploy:
       mode: global
     volumes:
-      - data_dir:/data
+      - /data/docker/smwc-web:/data
     networks:
       - net-internal
     depends_on:
@@ -50,7 +54,7 @@ services:
     deploy:
       replicas: 1
     volumes:
-      - data_dir:/data
+      - /data/docker/smwc-web:/data
     networks:
       - net-internal
     depends_on:
@@ -97,12 +101,6 @@ secrets:
     external: true
 
 volumes:
-  data_dir:
-    driver: local
-    driver_opts:
-      type: nfs
-      o: "addr=${NFS_HOST},rw"
-      device: ":${NFS_DIRECTORY}"
   flower_data:
   redis_data:
 

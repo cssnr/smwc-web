@@ -2,33 +2,45 @@ version: '3.8'
 
 services:
   nginx:
-    build: ./nginx
+    build:
+      context: ./nginx
+      network: host
     image: shane-smwc-web-nginx:latest
     deploy:
       mode: global
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik-public"
+        - "traefik.constraint-label=traefik-public"
+        - "traefik.http.routers.STACK_NAME-http.rule=Host(${TRAEFIK_HOST})"
+        - "traefik.http.routers.STACK_NAME-http.entrypoints=http"
+        - "traefik.http.routers.STACK_NAME-http.middlewares=https-redirect"
+        - "traefik.http.routers.STACK_NAME-https.rule=Host(${TRAEFIK_HOST})"
+        - "traefik.http.routers.STACK_NAME-https.entrypoints=https"
+        - "traefik.http.routers.STACK_NAME-https.tls=true"
+        - "traefik.http.services.STACK_NAME.loadbalancer.server.port=80"
+        - "traefik.http.services.STACK_NAME.loadbalancer.server.scheme=http"
     volumes:
-      - data_dir:/data
+      - /data/docker/smwc-web:/data
     secrets:
-      - source: cssnr.com.crt
-        target: /etc/ssl/cssnr.com.crt
-      - source: cssnr.com.key
-        target: /etc/ssl/cssnr.com.key
       - source: cssnr_basic_http_auth
         target: /etc/nginx/auth.users
     ports:
-      - "443:443"
+      - "80:80"
     depends_on:
       - app
 
   app:
-    build: ./app
+    build:
+      context: ./app
+      network: host
     image: shane-smwc-web-app:latest
     env_file: settings.env
     command: "gunicorn smwc_web.wsgi:application -w 2 -b 0.0.0.0:9000"
     deploy:
       mode: global
     volumes:
-      - data_dir:/data
+      - /data/docker/smwc-web:/data
     depends_on:
       - redis
 
@@ -39,7 +51,7 @@ services:
     deploy:
       replicas: 1
     volumes:
-      - data_dir:/data
+      - /data/docker/smwc-web:/data
     depends_on:
       - redis
       - app
@@ -74,10 +86,6 @@ services:
       - redis_data:/data
 
 secrets:
-  cssnr.com.crt:
-    file: /etc/ssl/cssnr.com.crt
-  cssnr.com.key:
-    file: /etc/ssl/cssnr.com.key
   cssnr_basic_http_auth:
     file: ~/basic_http_auth
 

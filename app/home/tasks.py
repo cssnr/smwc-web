@@ -1,4 +1,5 @@
 import datetime
+# import django_statsd
 import ftplib
 import logging
 import os
@@ -8,7 +9,6 @@ import tarfile
 import tempfile
 import urllib3
 from urllib import parse
-from django_statsd.clients import statsd
 from django.conf import settings
 from django.core.cache import cache
 from django.core.cache.utils import make_template_fragment_key
@@ -53,7 +53,7 @@ def process_hacks():
                 continue
 
             logger.debug('tasks.process_hacks.created')
-            statsd.incr('tasks.process_hacks.created')
+            # django_statsd.incr('tasks.process_hacks.created')
             hack.name = h.text
             hack.smwc_href = href
             SmwCentral.update_hack_info(hack)
@@ -66,7 +66,7 @@ def process_hacks():
             logger.info('New Hack: %s | %s | %s', hack.smwc_id, hack.name, hack.get_hack_url())
 
         except Exception as error:
-            statsd.incr('tasks.process_hacks.errors')
+            # django_statsd.incr('tasks.process_hacks.errors')
             errors += 1
             logger.exception(error)
             continue
@@ -97,12 +97,12 @@ def send_alert(hook_pk, message):
         hook = Webhooks.objects.get(pk=hook_pk)
         body = {'content': message}
         r = requests.post(hook.webhook_url, json=body, timeout=30)
-        statsd.incr('tasks.send_alert.status_codes.{}'.format(r.status_code))
+        # django_statsd.incr('tasks.send_alert.status_codes.{}'.format(r.status_code))
         if r.status_code == 404:
             logger.warning('Hook %s removed by owner %s - %s',
                            hook.hook_id, hook.owner_username, hook.webhook_url)
             hook.delete()
-            statsd.incr('tasks.send_alert.hook_delete')
+            # django_statsd.incr('tasks.send_alert.hook_delete')
             return '404: Hook removed by owner and deleted from database.'
 
         if not r.ok:
@@ -112,7 +112,7 @@ def send_alert(hook_pk, message):
         return '{}: {}'.format(r.status_code, r.content.decode(r.encoding))
 
     except Exception as error:
-        statsd.incr('tasks.send_alert.errors')
+        # django_statsd.incr('tasks.send_alert.errors')
         logger.exception(error)
         raise
 
@@ -122,14 +122,14 @@ def send_discord_message(url, message):
     try:
         body = {'content': message}
         r = requests.post(url, json=body, timeout=30)
-        statsd.incr('tasks.send_discord_message.status_codes.{}'.format(r.status_code))
+        # django_statsd.incr('tasks.send_discord_message.status_codes.{}'.format(r.status_code))
         if not r.ok:
             logger.warning(r.content.decode(r.encoding))
             r.raise_for_status()
         return '{}: {}'.format(r.status_code, r.content.decode(r.encoding))
 
     except Exception as error:
-        statsd.incr('tasks.send_discord_message.errors.')
+        # django_statsd.incr('tasks.send_discord_message.errors.')
         logger.exception(error)
         raise
 
@@ -270,7 +270,7 @@ class SmwCentral(object):
     def get_waiting():
         new_hacks = 'https://www.smwcentral.net/?p=section&s=smwhacks&u=1'
         r = requests.get(new_hacks, timeout=30)
-        statsd.incr('tasks.get_waiting.status_codes.{}'.format(r.status_code))
+        # django_statsd.incr('tasks.get_waiting.status_codes.{}'.format(r.status_code))
         soup = BeautifulSoup(r.content.decode(r.encoding), 'html.parser')
         search_string = '/\?p=section&a=details&id='
         s = soup.findAll('a', attrs={'href': re.compile(search_string)})
@@ -304,7 +304,7 @@ class SmwCentral(object):
         try:
             logger.debug('rom_url: %s', hack.get_hack_url())
             r = requests.get(hack.get_hack_url(), verify=False, timeout=30)
-            statsd.incr('tasks.update_hack_info.status_codes.{}'.format(r.status_code))
+            # django_statsd.incr('tasks.update_hack_info.status_codes.{}'.format(r.status_code))
             if not r.ok:
                 logger.error('Error retrieving smwc webpage: %s', r.status_code)
                 r.raise_for_status()
@@ -346,7 +346,7 @@ class SmwCentral(object):
 
         logger.info('Download URL: %s', hack.download_url)
         r = requests.get(hack.download_url, verify=False, timeout=30)
-        statsd.incr('tasks.download_rom.status_codes.{}'.format(r.status_code))
+        # django_statsd.incr('tasks.download_rom.status_codes.{}'.format(r.status_code))
         if not r.ok:
             logger.error('Error retrieving rom download archive: %s', r.status_code)
             logger.error(r.content)
