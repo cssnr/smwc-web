@@ -36,7 +36,7 @@ SECURE_REFERRER_POLICY = config('SECURE_REFERRER_POLICY', 'no-referrer')
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
-CSRF_TRUSTED_ORIGINS = config('CSRF_ORIGINS', 'https://intranet.cssnr.com', Csv())
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', 'https://*', Csv(delimiter=' '))
 
 OAUTH_CLIENT_ID = config('OAUTH_CLIENT_ID')
 OAUTH_CLIENT_SECRET = config('OAUTH_CLIENT_SECRET')

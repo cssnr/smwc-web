@@ -73,18 +73,18 @@ services:
       - app
       - redis
 
-  flower:
-    image: mher/flower
-    env_file: ${ENV_FILE}
-    deploy:
-      replicas: 1
-    volumes:
-      - flower_data:/data
-    networks:
-      - net-internal
-    depends_on:
-      - app
-      - redis
+#  flower:
+#    image: mher/flower
+#    env_file: ${ENV_FILE}
+#    deploy:
+#      replicas: 1
+#    volumes:
+#      - flower_data:/data
+#    networks:
+#      - net-internal
+#    depends_on:
+#      - app
+#      - redis
 
   redis:
     image: redis:6-alpine
