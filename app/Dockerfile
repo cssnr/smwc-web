@@ -24,6 +24,7 @@ COPY --from=base /usr/local/bin/ /usr/local/bin/
 RUN  apk add --no-cache mysql-dev libc6-compat strace
 
 WORKDIR /app
-COPY --chown=app:app . .
+#COPY --chown=app:app . .
+COPY . .
 #USER app
 ENTRYPOINT ["sh", "docker-entrypoint.sh"]
