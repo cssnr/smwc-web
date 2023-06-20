@@ -1,10 +1,10 @@
 import datetime
-# import django_statsd
 import ftplib
 import logging
 import os
 import re
 import requests
+import statsd
 import tarfile
 import tempfile
 import urllib3
@@ -17,7 +17,8 @@ from bs4 import BeautifulSoup
 from celery import shared_task
 from home.models import Hacks, Webhooks
 
-logger = logging.getLogger('app')
+logger = logging.getLogger('celery')
+c = statsd.StatsClient(settings.STATSD_HOST, settings.STATSD_PORT, settings.STATSD_PREFIX)
 urllib3.disable_warnings()
 
 
@@ -53,7 +54,7 @@ def process_hacks():
                 continue
 
             logger.debug('tasks.process_hacks.created')
-            # django_statsd.incr('tasks.process_hacks.created')
+            c.incr('tasks.process_hacks.created')
             hack.name = h.text
             hack.smwc_href = href
             SmwCentral.update_hack_info(hack)
@@ -66,7 +67,7 @@ def process_hacks():
             logger.info('New Hack: %s | %s | %s', hack.smwc_id, hack.name, hack.get_hack_url())
 
         except Exception as error:
-            # django_statsd.incr('tasks.process_hacks.errors')
+            c.incr('tasks.process_hacks.errors')
             errors += 1
             logger.exception(error)
             continue
@@ -97,12 +98,12 @@ def send_alert(hook_pk, message):
         hook = Webhooks.objects.get(pk=hook_pk)
         body = {'content': message}
         r = requests.post(hook.webhook_url, json=body, timeout=30)
-        # django_statsd.incr('tasks.send_alert.status_codes.{}'.format(r.status_code))
+        c.incr('tasks.send_alert.status_codes.{}'.format(r.status_code))
         if r.status_code == 404:
             logger.warning('Hook %s removed by owner %s - %s',
                            hook.hook_id, hook.owner_username, hook.webhook_url)
             hook.delete()
-            # django_statsd.incr('tasks.send_alert.hook_delete')
+            c.incr('tasks.send_alert.hook_delete')
             return '404: Hook removed by owner and deleted from database.'
 
         if not r.ok:
@@ -112,7 +113,7 @@ def send_alert(hook_pk, message):
         return '{}: {}'.format(r.status_code, r.content.decode(r.encoding))
 
     except Exception as error:
-        # django_statsd.incr('tasks.send_alert.errors')
+        c.incr('tasks.send_alert.errors')
         logger.exception(error)
         raise
 
@@ -122,14 +123,14 @@ def send_discord_message(url, message):
     try:
         body = {'content': message}
         r = requests.post(url, json=body, timeout=30)
-        # django_statsd.incr('tasks.send_discord_message.status_codes.{}'.format(r.status_code))
+        c.incr('tasks.send_discord_message.status_codes.{}'.format(r.status_code))
         if not r.ok:
             logger.warning(r.content.decode(r.encoding))
             r.raise_for_status()
         return '{}: {}'.format(r.status_code, r.content.decode(r.encoding))
 
     except Exception as error:
-        # django_statsd.incr('tasks.send_discord_message.errors.')
+        c.incr('tasks.send_discord_message.errors.')
         logger.exception(error)
         raise
 
@@ -270,7 +271,7 @@ class SmwCentral(object):
     def get_waiting():
         new_hacks = 'https://www.smwcentral.net/?p=section&s=smwhacks&u=1'
         r = requests.get(new_hacks, timeout=30)
-        # django_statsd.incr('tasks.get_waiting.status_codes.{}'.format(r.status_code))
+        c.incr('tasks.get_waiting.status_codes.{}'.format(r.status_code))
         soup = BeautifulSoup(r.content.decode(r.encoding), 'html.parser')
         search_string = '/\?p=section&a=details&id='
         s = soup.findAll('a', attrs={'href': re.compile(search_string)})
@@ -304,37 +305,32 @@ class SmwCentral(object):
         try:
             logger.debug('rom_url: %s', hack.get_hack_url())
             r = requests.get(hack.get_hack_url(), verify=False, timeout=30)
-            # django_statsd.incr('tasks.update_hack_info.status_codes.{}'.format(r.status_code))
+            c.incr('tasks.update_hack_info.status_codes.{}'.format(r.status_code))
             if not r.ok:
                 logger.error('Error retrieving smwc webpage: %s', r.status_code)
                 r.raise_for_status()
-
-            soup = BeautifulSoup(r.content.decode(r.encoding), 'html.parser')
-            download = soup.find(string='Download')
-            hack.download_url = 'https:{}'.format(download.findPrevious()['href'])
-
-            d = soup.find(string=re.compile('.*Type:.*'))
-            hack.difficulty = d.parent.parent.find(class_='cell2').text.strip()
-
-            d = soup.find(string=re.compile('.*Authors:.*'))
-            hack.authors = d.parent.parent.find(class_='cell2').text.strip()
-
-            d = soup.find(string=re.compile('.*Length:.*'))
-            hack.length = d.parent.parent.find(class_='cell2').text.strip()
-
-            d = soup.find(string=re.compile('.*Description:.*'))
-            hack.description = d.parent.parent.find(class_='cell2').text.strip()
-            logger.debug(type(hack.description))
-            logger.debug('hack.description: %s', hack.description)
-
-            d = soup.find(string=re.compile('.*Demo:.*'))
-            demo = d.parent.parent.find(class_='cell2').text.strip()
-            hack.demo = True if demo == 'Yes' else False
-
-            d = soup.find(string=re.compile('.*Featured:.*'))
-            featured = d.parent.parent.find(class_='cell2').text.strip()
-            hack.featured = True if featured == 'Yes' else False
-
+            soup = BeautifulSoup(r.text, 'html.parser')
+            details_table = soup.find('table', class_='list')
+            details_rows = details_table.find_all('tr')
+            data = {}
+            for row in details_rows:
+                field = row.find('td', class_='field')
+                value = row.find('td', class_='name') or row.find('td', class_=None)
+                if field and value:
+                    data[field.text.strip(':')] = value.text.strip()
+            req = ['Name', 'Author', 'Submitted', 'Demo', 'Featured', 'Length',
+                   'Type', 'Description', 'Tags', 'Comments', 'Rating']
+            for x in req:
+                if x not in data:
+                    data[x] = None
+            download_section = soup.find('div', class_='download-section')
+            hack.download_url = 'https:' + download_section.find('a', class_='button action')['href']
+            hack.difficulty = data['Type']
+            hack.authors = data['Author']
+            hack.length = data['Length']
+            hack.description = data['Description']
+            hack.demo = True if data['Demo'] == 'Yes' else False
+            hack.featured = True if data['Featured'] == 'Yes' else False
         except Exception as error:
             logger.exception(error)
 
@@ -346,7 +342,7 @@ class SmwCentral(object):
 
         logger.info('Download URL: %s', hack.download_url)
         r = requests.get(hack.download_url, verify=False, timeout=30)
-        # django_statsd.incr('tasks.download_rom.status_codes.{}'.format(r.status_code))
+        c.incr('tasks.download_rom.status_codes.{}'.format(r.status_code))
         if not r.ok:
             logger.error('Error retrieving rom download archive: %s', r.status_code)
             logger.error(r.content)

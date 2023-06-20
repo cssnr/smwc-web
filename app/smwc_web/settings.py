@@ -1,42 +1,43 @@
-import os
 import sentry_sdk
 from celery.schedules import crontab
 from decouple import config, Csv
+from django.contrib.messages import constants as message_constants
+from pathlib import Path
 from sentry_sdk.integrations.django import DjangoIntegration
-# import django_statsd
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ROOT_URLCONF = 'smwc_web.urls'
+BASE_DIR = Path(__file__).resolve().parent.parent
+SECRET_KEY = config('SECRET_KEY')
+DEBUG = config('DEBUG', 'False', bool)
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', '*', Csv())
+SESSION_COOKIE_AGE = config('SESSION_COOKIE_AGE', 3600 * 24 * 14, int)
+
 WSGI_APPLICATION = 'smwc_web.wsgi.application'
+ROOT_URLCONF = 'smwc_web.urls'
+# AUTH_USER_MODEL = 'oauth.CustomUser'
 
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = '/oauth/'
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-TEMPLATES_DIRS = [os.path.join(BASE_DIR, 'templates')]
-
-SESSION_COOKIE_AGE = config('SESSION_COOKIE_AGE', 3600 * 24 * 14, cast=int)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', '*').split()
-DEBUG = config('DEBUG', 'False', cast=bool)
-SECRET_KEY = config('SECRET_KEY')
 STATIC_ROOT = config('STATIC_ROOT')
 MEDIA_ROOT = config('MEDIA_ROOT')
+STATICFILES_DIRS = [BASE_DIR / 'static']
+TEMPLATES_DIRS = [BASE_DIR / 'templates']
 
 LANGUAGE_CODE = config('LANGUAGE_CODE', 'en-us')
-DATETIME_FORMAT = config('DATETIME_FORMAT', 'N j, Y, f A')
-TIME_ZONE = config('TZ', 'America/Los_Angeles')
-USE_TZ = config('USE_TZ', 'True', cast=bool)
-
+USE_TZ = config('USE_TZ', 'True', bool)
+TIME_ZONE = config('TZ', 'UTC')
 USE_I18N = True
 USE_L10N = True
 
-USE_X_FORWARDED_HOST = config('USE_X_FORWARDED_HOST', 'False', cast=bool)
-SECURE_REFERRER_POLICY = config('SECURE_REFERRER_POLICY', 'no-referrer')
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
-
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+USE_X_FORWARDED_HOST = config('USE_X_FORWARDED_HOST', 'False', bool)
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', 'https://*', Csv(delimiter=' '))
+SECURE_REFERRER_POLICY = config('SECURE_REFERRER_POLICY', 'no-referrer')
+DJANGO_REDIS_IGNORE_EXCEPTIONS = config('REDIS_IGNORE_EXCEPTIONS', True, bool)
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 OAUTH_CLIENT_ID = config('OAUTH_CLIENT_ID')
 OAUTH_CLIENT_SECRET = config('OAUTH_CLIENT_SECRET')
@@ -51,7 +52,7 @@ CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
 CELERY_TIMEZONE = config('TZ', 'America/Los_Angeles')
 
 STATSD_PREFIX = config('STATSD_PREFIX', 'smwcweb.dev')
-STATSD_PORT = config('STATSD_PORT', '8125', cast=int)
+STATSD_PORT = config('STATSD_PORT', '8125', int)
 STATSD_HOST = config('STATSD_HOST', 'localhost')
 # STATSD_CLIENT = config('STATSD_CLIENT', 'django_statsd')
 
@@ -74,15 +75,23 @@ APP_SMWC_URL = config('APP_SMWC_URL').rstrip('/')
 APP_DISCORD_INVITE = config('APP_DISCORD_INVITE')
 APP_MIN_HACK_ID = 18000
 
+MESSAGE_TAGS = {
+    message_constants.DEBUG: 'secondary',
+    message_constants.INFO: 'info',
+    message_constants.SUCCESS: 'success',
+    message_constants.WARNING: 'warning',
+    message_constants.ERROR: 'danger',
+}
+
 CELERY_BEAT_SCHEDULE = {
     'process_hacks': {
         'task': 'home.tasks.process_hacks',
         'schedule': crontab('*/10'),
     },
-    'backup_hacks': {
-        'task': 'home.tasks.backup_hacks',
-        'schedule': crontab(minute=5, hour=0),
-    },
+    # 'backup_hacks': {
+    #     'task': 'home.tasks.backup_hacks',
+    #     'schedule': crontab(minute=5, hour=0),
+    # },
 }
 
 if config('SENTRY_URL', False):
@@ -94,34 +103,12 @@ if config('SENTRY_URL', False):
         debug=config('SENTRY_DEBUG', False, cast=bool),
     )
 
-if DEBUG:
-    def show_toolbar(request):
-        return True if request.user.is_staff else False
-
-    DEBUG_TOOLBAR_CONFIG = {'SHOW_TOOLBAR_CALLBACK': show_toolbar}
-    DEBUG_TOOLBAR_PANELS = [
-        'debug_toolbar.panels.versions.VersionsPanel',
-        'debug_toolbar.panels.timer.TimerPanel',
-        'debug_toolbar.panels.settings.SettingsPanel',
-        'debug_toolbar.panels.headers.HeadersPanel',
-        'debug_toolbar.panels.request.RequestPanel',
-        'debug_toolbar.panels.sql.SQLPanel',
-        'debug_toolbar.panels.staticfiles.StaticFilesPanel',
-        'debug_toolbar.panels.templates.TemplatesPanel',
-        'debug_toolbar.panels.cache.CachePanel',
-        'debug_toolbar.panels.signals.SignalsPanel',
-        'debug_toolbar.panels.logging.LoggingPanel',
-        'debug_toolbar.panels.redirects.RedirectsPanel',
-    ]
-    # if 'django_statsd.clients.toolbar' in STATSD_CLIENT:
-    #     DEBUG_TOOLBAR_PANELS.append('django_statsd.panel.StatsdPanel')
-
 CACHES = {
     'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
+        'BACKEND': config('CACHE_BACKEND',
+                          'django.core.cache.backends.dummy.DummyCache'),
         'LOCATION': config('CACHE_LOCATION'),
         'OPTIONS': {
-            'PASSWORD': os.environ.get('CELERY_REDIS_PASSWORD'),
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         },
     },
@@ -139,42 +126,6 @@ DATABASES = {
             'isolation_level': 'repeatable read',
             'init_command': "SET sql_mode='STRICT_ALL_TABLES'",
         },
-    }
-}
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'standard': {
-            'format': ('%(asctime)s - '
-                       '%(levelname)s - '
-                       '%(filename)s '
-                       '%(module)s.%(funcName)s:%(lineno)d - '
-                       '%(message)s'),
-        },
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'standard',
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': config('DJANGO_LOG_LEVEL', 'INFO'),
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': config('DJANGO_LOG_LEVEL', 'INFO'),
-            'propagate': True,
-        },
-        'app': {
-            'handlers': ['console'],
-            'level': config('APP_LOG_LEVEL', 'DEBUG'),
-            'propagate': True,
-        },
     },
 }
 
@@ -187,7 +138,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_celery_beat',
     'django_extensions',
-    # 'django_statsd',
     'debug_toolbar',
     'home',
     'oauth',
@@ -195,7 +145,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    # 'django_statsd.middleware.StatsdMiddleware ',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -223,3 +172,57 @@ TEMPLATES = [
         },
     },
 ]
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'standard': {
+            'format': ('%(asctime)s - '
+                       '%(levelname)s - '
+                       '%(filename)s '
+                       '%(module)s.%(funcName)s:%(lineno)d - '
+                       '%(message)s'),
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': config('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': True,
+        },
+        'app': {
+            'handlers': ['console'],
+            'level': config('APP_LOG_LEVEL', 'DEBUG'),
+            'propagate': True,
+        },
+    },
+}
+
+if DEBUG:
+    def show_toolbar(request):
+        return True if request.user.is_staff else False
+
+    DEBUG_TOOLBAR_CONFIG = {'SHOW_TOOLBAR_CALLBACK': show_toolbar}
+    DEBUG_TOOLBAR_PANELS = [
+        'debug_toolbar.panels.versions.VersionsPanel',
+        'debug_toolbar.panels.timer.TimerPanel',
+        'debug_toolbar.panels.settings.SettingsPanel',
+        'debug_toolbar.panels.headers.HeadersPanel',
+        'debug_toolbar.panels.request.RequestPanel',
+        'debug_toolbar.panels.sql.SQLPanel',
+        'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+        'debug_toolbar.panels.templates.TemplatesPanel',
+        'debug_toolbar.panels.cache.CachePanel',
+        'debug_toolbar.panels.signals.SignalsPanel',
+        'debug_toolbar.panels.logging.LoggingPanel',
+        'debug_toolbar.panels.redirects.RedirectsPanel',
+    ]
+    # if 'django_statsd.clients.toolbar' in STATSD_CLIENT:
+    #     DEBUG_TOOLBAR_PANELS.append('django_statsd.panel.StatsdPanel')

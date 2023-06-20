@@ -21,7 +21,7 @@ COPY --from=base /usr/local/bin/ /usr/local/bin/
 RUN addgroup -g 1000 app  &&\
     adduser -S -H -h /app -s /sbin/nologin -u 1000 -G app app  &&\
     mkdir -p /app /data  &&  chown app:app /app /data  &&\
-    apk add --no-cache mysql-dev libc6-compat gtk+3.0 libgomp gcompat
+    apk add --no-cache curl mysql-dev libc6-compat gtk+3.0 libgomp gcompat
 
 WORKDIR /app
 COPY --chown=app:app . .

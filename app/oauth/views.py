@@ -1,7 +1,7 @@
-# import django_statsd
 import logging
 import random
 import requests
+import statsd
 import string
 import urllib.parse
 from django.contrib import messages
@@ -15,6 +15,7 @@ from home.models import Webhooks
 from home.tasks import send_discord_message
 
 logger = logging.getLogger('app')
+c = statsd.StatsClient(settings.STATSD_HOST, settings.STATSD_PORT, settings.STATSD_PREFIX)
 
 
 def do_oauth(request):
