@@ -75,7 +75,7 @@ def process_hacks():
     return 'Processed {} hacks with {} errors.'.format(len(waiting), errors)
 
 
-@shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 60}, rate_limit='10/m')
+@shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 60}, rate_limit='10/m')
 def process_alert(hack_pk):
     hack = Hacks.objects.get(pk=hack_pk)
     message = gen_discord_message(hack)
