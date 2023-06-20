@@ -38,7 +38,7 @@ services:
     env_file: settings.env
     command: "gunicorn smwc_web.wsgi:application -w 2 -b 0.0.0.0:9000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/app-health-check/"]
+      test: ["CMD", "curl", "-sf", "http://localhost:9000/app-health-check/"]
       interval: 1m
       timeout: 10s
       retries: 3
