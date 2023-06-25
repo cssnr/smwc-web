@@ -21,7 +21,7 @@ services:
         - "traefik.http.services.STACK_NAME.loadbalancer.server.port=80"
         - "traefik.http.services.STACK_NAME.loadbalancer.server.scheme=http"
     volumes:
-      - /data/docker/dev_cssnr-smwc-web:/data
+      - /data/docker/${STACK_NAME}:/data
     secrets:
       - source: cssnr_basic_http_auth
         target: /etc/nginx/auth.users
@@ -47,7 +47,7 @@ services:
     deploy:
       mode: global
     volumes:
-      - /data/docker/dev_cssnr-smwc-web:/data
+      - /data/docker/${STACK_NAME}:/data
     networks:
       - net-internal
     depends_on:
@@ -60,7 +60,7 @@ services:
     deploy:
       replicas: 1
     volumes:
-      - /data/docker/dev_cssnr-smwc-web:/data
+      - /data/docker/${STACK_NAME}:/data
     networks:
       - net-internal
     depends_on:
