@@ -1,9 +1,9 @@
 import logging
 import random
 import requests
+import statsd
 import string
 import urllib.parse
-from django_statsd.clients import statsd
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.shortcuts import redirect
@@ -15,6 +15,7 @@ from home.models import Webhooks
 from home.tasks import send_discord_message
 
 logger = logging.getLogger('app')
+c = statsd.StatsClient(settings.STATSD_HOST, settings.STATSD_PORT, settings.STATSD_PREFIX)
 
 
 def do_oauth(request):
@@ -33,7 +34,7 @@ def do_oauth(request):
     url_params = urllib.parse.urlencode(params)
     url = 'https://discordapp.com/api/oauth2/authorize?{}'.format(url_params)
     logger.debug('url: {}'.format(url))
-    statsd.incr('oauth.do_oauth.click')
+    # django_statsd.incr('oauth.do_oauth.click')
     return HttpResponseRedirect(url)
 
 
@@ -64,11 +65,11 @@ def callback(request):
             f'are posted. To browse the archive visit: {settings.APP_SITE_URL}'
         )
         send_discord_message.delay(oauth_response['webhook']['url'], msg)
-        statsd.incr('oauth.callback.success.')
+        # django_statsd.incr('oauth.callback.success.')
         messages.success(request, 'Operation Successful')
         return redirect('home:index')
     except Exception as error:
-        statsd.incr('oauth.callback.errors.')
+        # django_statsd.incr('oauth.callback.errors.')
         logger.exception(error)
         messages.error(request, 'Fatal Login Auth. Report as Bug')
         return redirect('home:index')
@@ -98,7 +99,7 @@ def oauth_token(code):
         'scope': settings.OAUTH_SCOPE,
     }
     r = requests.post(url, data=data, timeout=10)
-    statsd.incr('oauth.oauth_token.status_codes.{}'.format(r.status_code))
+    # django_statsd.incr('oauth.oauth_token.status_codes.{}'.format(r.status_code))
     logger.debug('status_code: {}'.format(r.status_code))
     logger.debug('content: {}'.format(r.content))
     return r.json()
@@ -113,7 +114,7 @@ def get_discord(access_token):
         'Authorization': 'Bearer {}'.format(access_token),
     }
     r = requests.get(url, headers=headers, timeout=10)
-    statsd.incr('oauth.get_discord.status_codes.{}'.format(r.status_code))
+    # django_statsd.incr('oauth.get_discord.status_codes.{}'.format(r.status_code))
     logger.debug('status_code: {}'.format(r.status_code))
     logger.debug('content: {}'.format(r.content))
     return r.json()

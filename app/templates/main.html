@@ -85,7 +85,7 @@
             <div class="col">
                 {% if messages %}
                     {% for message in messages %}
-                        <div class="alert alert-{{ message.tags|tag_to_class }} alert-dismissible my-1" role="alert">
+                        <div class="alert alert-{{ message.tags }} alert-dismissible my-1" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                 <span aria-hidden="true">&times;</span></button>
                             {{ message.message|safe }}

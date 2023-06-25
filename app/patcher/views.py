@@ -1,16 +1,17 @@
 import logging
 import os
+import statsd
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils.crypto import get_random_string
-from django_statsd.clients import statsd
 from patcher.forms import PatcherForm
 from patcher.patcher import RomPatcher
 from patcher.tasks import cleanup_hack
 
 logger = logging.getLogger('app')
+c = statsd.StatsClient(settings.STATSD_HOST, settings.STATSD_PORT, settings.STATSD_PREFIX)
 
 
 def patcher_view(request):
@@ -23,7 +24,7 @@ def patcher_view(request):
         if not form.is_valid():
             return JsonResponse({'error': form.errors}, status=400)
 
-        statsd.incr('patcher.rom_patcher.click')
+        c.incr('patcher.rom_patcher.click')
         patcher = RomPatcher()
 
         # 2 - SOURCE ROM
@@ -61,7 +62,7 @@ def patcher_view(request):
         logger.debug('patcher.new_rom_path: {}'.format(patcher.new_rom_path))
         logger.debug('patcher.new_rom_name: {}'.format(patcher.new_rom_name))
 
-        rand = get_random_string()
+        rand = get_random_string(12)
         fs = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, rand))
         fs.base_url += rand + '/'
 
@@ -71,10 +72,10 @@ def patcher_view(request):
         logger.debug('fs.url(filename): {}'.format(fs.url(filename)))
         cleanup_hack.apply_async((os.path.dirname(fs.path(filename)),), countdown=120)
 
-        statsd.incr('patcher.rom_patcher.success')
+        c.incr('patcher.rom_patcher.success')
         return JsonResponse({'location': fs.url(filename)})
 
     except Exception as error:
         logger.exception(error)
-        statsd.incr('patcher.rom_patcher.error')
+        c.incr('patcher.rom_patcher.error')
         return JsonResponse({'error': error}, status=400)
