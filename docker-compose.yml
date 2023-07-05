@@ -8,6 +8,10 @@ services:
     image: shane-smwc-web-nginx:latest
     deploy:
       mode: global
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 50M
       labels:
         - "traefik.enable=true"
         - "traefik.docker.network=traefik-public"
@@ -25,10 +29,10 @@ services:
     secrets:
       - source: cssnr_basic_http_auth
         target: /etc/nginx/auth.users
-    ports:
-      - "80:80"
     depends_on:
       - app
+    ports:
+      - "80:80"
 
   app:
     build:
@@ -45,6 +49,10 @@ services:
       start_period: 30s
     deploy:
       mode: global
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 400M
     volumes:
       - /data/docker/smwc-web:/data
     depends_on:
@@ -56,6 +64,10 @@ services:
     command: "celery -A smwc_web worker -l INFO -c 2"
     deploy:
       replicas: 1
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 250M
     volumes:
       - /data/docker/smwc-web:/data
     depends_on:
@@ -68,26 +80,38 @@ services:
     command: "celery -A smwc_web beat -l INFO -S django"
     deploy:
       replicas: 1
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 150M
     depends_on:
       - redis
       - app
 
-  flower:
-    image: mher/flower:0.9.5
-    env_file: settings.env
-    deploy:
-      replicas: 1
-    volumes:
-      - flower_data:/data
-    depends_on:
-      - redis
-      - app
+#  flower:
+#    image: mher/flower:1.2
+#    env_file: settings.env
+#    deploy:
+#      replicas: 1
+#      resources:
+#        limits:
+#          cpus: '2.0'
+#          memory: 100M
+#    volumes:
+#      - flower_data:/data
+#    depends_on:
+#      - redis
+#      - app
 
   redis:
     image: redis:6-alpine
     command: "redis-server --appendonly yes"
     deploy:
       replicas: 1
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 50M
     volumes:
       - redis_data:/data
 

@@ -5,9 +5,13 @@ services:
     build:
       context: ./nginx
       network: host
-    image: registry.hosted-domains.com/shane/smwc-web-nginx:${VERSION}
+    image: ${REGISTRY_HOST}/shane/smwc-web-nginx:${VERSION}
     deploy:
       mode: global
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 50M
       labels:
         - "traefik.enable=true"
         - "traefik.docker.network=traefik-public"
@@ -25,17 +29,17 @@ services:
     secrets:
       - source: cssnr_basic_http_auth
         target: /etc/nginx/auth.users
+    depends_on:
+      - app
     networks:
       - traefik-public
       - net-internal
-    depends_on:
-      - app
 
   app:
     build:
       context: ./app
       network: host
-    image: registry.hosted-domains.com/shane/smwc-web-app:${VERSION}
+    image: ${REGISTRY_HOST}/shane/smwc-web-app:${VERSION}
     env_file: ${ENV_FILE}
     command: "gunicorn smwc_web.wsgi:application -w 2 -b 0.0.0.0:9000"
     healthcheck:
@@ -46,57 +50,77 @@ services:
       start_period: 30s
     deploy:
       mode: global
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 400M
     volumes:
       - /data/docker/STACK_NAME:/data
-    networks:
-      - net-internal
     depends_on:
       - redis
+    networks:
+      - net-internal
 
   worker:
-    image: registry.hosted-domains.com/shane/smwc-web-app:${VERSION}
+    image: ${REGISTRY_HOST}/shane/smwc-web-app:${VERSION}
     env_file: ${ENV_FILE}
     command: "celery -A smwc_web worker -l INFO -c 2"
     deploy:
       replicas: 1
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 250M
     volumes:
       - /data/docker/STACK_NAME:/data
-    networks:
-      - net-internal
     depends_on:
       - app
       - redis
+    networks:
+      - net-internal
 
   beat:
-    image: registry.hosted-domains.com/shane/smwc-web-app:${VERSION}
+    image: ${REGISTRY_HOST}/shane/smwc-web-app:${VERSION}
     env_file: ${ENV_FILE}
     command: "celery -A smwc_web beat -l INFO -S django"
     deploy:
       replicas: 1
-    networks:
-      - net-internal
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 150M
     depends_on:
       - app
       - redis
+    networks:
+      - net-internal
 
 #  flower:
-#    image: mher/flower
+#    image: mher/flower:1.2
 #    env_file: ${ENV_FILE}
 #    deploy:
-#      replicas: 1
+#    replicas: 1
+#    resources:
+#      limits:
+#        cpus: '2.0'
+#        memory: 100M
 #    volumes:
 #      - flower_data:/data
-#    networks:
-#      - net-internal
 #    depends_on:
 #      - app
 #      - redis
+#    networks:
+#      - net-internal
 
   redis:
     image: redis:6-alpine
     command: "redis-server --appendonly yes"
     deploy:
       replicas: 1
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 50M
     volumes:
       - redis_data:/data
     networks:
@@ -107,7 +131,8 @@ secrets:
     external: true
 
 volumes:
-  flower_data:
+#  data_dir:
+#  flower_data:
   redis_data:
 
 networks:
