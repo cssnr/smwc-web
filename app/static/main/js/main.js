@@ -1,10 +1,7 @@
 // Document Dot Ready
-$(document).ready(function() {
-
-    // Log Out Form Button Function
-    $('.log-out').click(function () {
-        $('#log-out').submit();
-        return false;
-    });
-
-});
+$(document).ready(function () {
+    $('.log-out').click(function (event) {
+        event.preventDefault()
+        $('#log-out').submit()
+    })
+})

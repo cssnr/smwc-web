@@ -1,16 +1,16 @@
-version: '3.7'
+version: "3.7"
 
 services:
   nginx:
     build:
       context: ./nginx
       network: host
-    image: shane-smwc-web-nginx:latest
+    image: ${REGISTRY_HOST}/shane/smwc-web-nginx:${VERSION}
     deploy:
       mode: global
       resources:
         limits:
-          cpus: '2.0'
+          cpus: "2.0"
           memory: 50M
       labels:
         - "traefik.enable=true"
@@ -25,21 +25,22 @@ services:
         - "traefik.http.services.STACK_NAME.loadbalancer.server.port=80"
         - "traefik.http.services.STACK_NAME.loadbalancer.server.scheme=http"
     volumes:
-      - /data/docker/smwc-web:/data
+      - /data/docker/STACK_NAME:/data
     secrets:
       - source: cssnr_basic_http_auth
         target: /etc/nginx/auth.users
     depends_on:
       - app
-    ports:
-      - "80:80"
+    networks:
+      - traefik-public
+      - net-internal
 
   app:
     build:
       context: ./app
       network: host
-    image: shane-smwc-web-app:latest
-    env_file: settings.env
+    image: ${REGISTRY_HOST}/shane/smwc-web-app:${VERSION}
+    env_file: ${ENV_FILE}
     command: "gunicorn smwc_web.wsgi:application -w 2 -b 0.0.0.0:9000"
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:9000/app-health-check/"]
@@ -51,57 +52,65 @@ services:
       mode: global
       resources:
         limits:
-          cpus: '2.0'
+          cpus: "2.0"
           memory: 400M
     volumes:
-      - /data/docker/smwc-web:/data
+      - /data/docker/STACK_NAME:/data
     depends_on:
       - redis
+    networks:
+      - net-internal
 
   worker:
-    image: shane-smwc-web-app:latest
-    env_file: settings.env
+    image: ${REGISTRY_HOST}/shane/smwc-web-app:${VERSION}
+    env_file: ${ENV_FILE}
     command: "celery -A smwc_web worker -l INFO -c 2"
     deploy:
       replicas: 1
       resources:
         limits:
-          cpus: '2.0'
+          cpus: "2.0"
           memory: 250M
     volumes:
-      - /data/docker/smwc-web:/data
+      - /data/docker/STACK_NAME:/data
     depends_on:
-      - redis
       - app
+      - redis
+    networks:
+      - net-internal
 
   beat:
-    image: shane-smwc-web-app:latest
-    env_file: settings.env
+    image: ${REGISTRY_HOST}/shane/smwc-web-app:${VERSION}
+    env_file: ${ENV_FILE}
     command: "celery -A smwc_web beat -l INFO -S django"
     deploy:
       replicas: 1
       resources:
         limits:
-          cpus: '2.0'
+          cpus: "2.0"
           memory: 150M
     depends_on:
-      - redis
       - app
+      - redis
+    networks:
+      - net-internal
 
-#  flower:
-#    image: mher/flower:1.2
-#    env_file: settings.env
-#    deploy:
-#      replicas: 1
-#      resources:
-#        limits:
-#          cpus: '2.0'
-#          memory: 100M
-#    volumes:
-#      - flower_data:/data
-#    depends_on:
-#      - redis
-#      - app
+  #  flower:
+  #    image: mher/flower:1.2
+  #    env_file: ${ENV_FILE}
+  #    deploy:
+  #    replicas: 1
+  #    resources:
+  #      limits:
+  #        cpus: '2.0'
+  #        memory: 100M
+  #    volumes:
+  #      - flower_data:/data
+  #    depends_on:
+  #      - app
+  #      - redis
+  #    networks:
+  #      - net-internal
 
   redis:
     image: redis:6-alpine
@@ -110,16 +119,24 @@ services:
       replicas: 1
       resources:
         limits:
-          cpus: '2.0'
+          cpus: "2.0"
           memory: 50M
     volumes:
       - redis_data:/data
+    networks:
+      - net-internal
 
 secrets:
   cssnr_basic_http_auth:
-    file: ~/basic_http_auth
+    external: true
 
 volumes:
-  data_dir:
-  flower_data:
+  #  data_dir:
+  #  flower_data:
   redis_data:
+
+networks:
+  traefik-public:
+    external: true
+  net-internal:
+    driver: overlay
