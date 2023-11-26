@@ -8,8 +8,8 @@ $(document).ready(function () {
         if (btn.hasClass('disabled')) {
             return console.log('disabled')
         }
-        const searchIcon = $('#search-icon')
-        const romStatus = $('#rom-status')
+        const icon = $('#search-icon')
+        const status = $('#rom-status')
         const formData = new FormData($(this)[0])
         console.log('#patch-rom-form:', formData)
         $.ajax({
@@ -19,16 +19,14 @@ $(document).ready(function () {
             beforeSend: function (jqXHR, settings) {
                 console.log('jqXHR, settings :', jqXHR, settings)
                 btn.addClass('disabled')
-                searchIcon.addClass('fa-spin')
-                romStatus.addClass('progress-bar-striped progress-bar-animated')
+                icon.addClass('fa-spin')
+                status.addClass('progress-bar-striped progress-bar-animated')
                 $('#alerts-div').empty()
             },
             complete: function (jqXHR, textStatus) {
                 console.log('jqXHR, textStatus:', jqXHR, textStatus)
-                searchIcon.removeClass('fa-spin')
-                romStatus.removeClass(
-                    'progress-bar-striped progress-bar-animated'
-                )
+                icon.removeClass('fa-spin')
+                status.removeClass('progress-bar-striped progress-bar-animated')
                 btn.removeClass('disabled')
             },
             success: function (data, textStatus, jqXHR) {
@@ -37,18 +35,16 @@ $(document).ready(function () {
                     window.location.href = `/play/${data.location}`
                 } else {
                     $.fileDownload(data.location)
-                    const alert = gen_alert('Success! Download Starting...')
-                    $('#alerts-div').html(alert)
+                    addAlert('Success! Download Starting...')
                 }
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 console.log('jqXHR, textStatus:', jqXHR, textStatus)
-                console.log('errorThrown:', errorThrown)
                 try {
-                    alert(data.responseText)
+                    addAlert(jqXHR.responseJSON.error.__all__[0], 'warning')
                 } catch (error) {
-                    alert(errorThrown)
-                    console.log('Error: ' + error)
+                    console.log('error:', error)
+                    addAlert(errorThrown, 'danger')
                 }
             },
             cache: false,
@@ -58,15 +54,21 @@ $(document).ready(function () {
     })
 })
 
-function gen_alert(message) {
-    return (
-        '<div class="alert alert-success alert-dismissible fade show" role="alert">\n' +
-        '  ' +
-        message +
-        '\n' +
-        '  <button type="button" class="close" data-dismiss="alert" aria-label="Close">\n' +
-        '    <span aria-hidden="true">&times;</span>\n' +
-        '  </button>\n' +
-        '</div>'
+/**
+ * Generate Bootstrap Alert HTML
+ * @param message
+ * @param {String} type
+ * @return {String}
+ */
+function addAlert(message, type = 'success') {
+    $(`#alerts-div`).html(
+        `<div id="patch-alert" class="alert alert-${type} alert-dismissible fade show" role="alert">${message}` +
+            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+            '<span aria-hidden="true">&times;</span></button></div>'
     )
+    $('#patch-alert')
+        .fadeTo(15000, 500)
+        .slideUp(500, function () {
+            $('#success-alert').slideUp(500)
+        })
 }

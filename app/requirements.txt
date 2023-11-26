@@ -3,6 +3,7 @@ celery>=5,<6
 django>=4,<5
 django-debug-toolbar>=4,<5
 django-celery-beat
+# django-cors-headers
 django-extensions
 django-redis
 # django-statsd
@@ -13,4 +14,5 @@ redis
 requests
 sentry-sdk
 statsd
+watchdog
 Werkzeug
