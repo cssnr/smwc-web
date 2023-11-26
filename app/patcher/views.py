@@ -6,7 +6,8 @@ from django.core.files.storage import FileSystemStorage
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils.crypto import get_random_string
-# from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
 from patcher.forms import PatcherForm
 from patcher.patcher import RomPatcher
 from patcher.tasks import cleanup_hack
@@ -15,7 +16,7 @@ logger = logging.getLogger('app')
 c = statsd.StatsClient(settings.STATSD_HOST, settings.STATSD_PORT, settings.STATSD_PREFIX)
 
 
-# @csrf_exempt
+@csrf_exempt
 def patcher_view(request):
     # View: /patcher/
     if request.method == 'GET':
@@ -75,7 +76,11 @@ def patcher_view(request):
         cleanup_hack.apply_async((os.path.dirname(fs.path(filename)),), countdown=120)
 
         c.incr('patcher.rom_patcher.success')
-        return JsonResponse({'location': fs.url(filename)})
+        return JsonResponse({
+            'location': fs.url(filename),
+            'download': settings.APP_SITE_URL + fs.url(filename),
+            'play': settings.APP_SITE_URL + reverse('home:play-rom', kwargs={'rom': fs.url(filename)}),
+        })
 
     except Exception as error:
         logger.exception(error)
