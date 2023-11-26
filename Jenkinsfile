@@ -12,7 +12,7 @@ pipeline {
     }
     environment {
         DISCORD_ID = "discord-hook-smashed"
-        COMPOSE_FILE = "docker-compose-swarm.yml"
+        COMPOSE_FILE = "docker-compose-swarm.yaml"
         REGISTRY_HOST = "registry.hosted-domains.com"
 
         BUILD_CAUSE = getBuildCause()

@@ -57,6 +57,9 @@
                             <li class="nav-item {% block patcher_active %}{% endblock %}">
                                 <a class="nav-link" href="{% url 'patcher:home' %}">Online ROM Patcher</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'home:play' %}" target="_blank">Play Online</a>
+                            </li>
                         </ul>
 
                         {% if request.user.is_authenticated %}
