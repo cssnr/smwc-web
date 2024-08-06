@@ -269,12 +269,15 @@ def gen_discord_message(hack):
 class SmwCentral(object):
     @staticmethod
     def get_waiting():
-        new_hacks = 'https://www.smwcentral.net/?p=section&s=smwhacks&u=1'
+        # new_hacks = 'https://www.smwcentral.net/?p=section&s=smwhacks&u=1'  # old code
+        new_hacks = 'https://www.smwcentral.net/?p=section&s=smwhacks&u=1&locale=en-US'
         r = requests.get(new_hacks, timeout=30)
         c.incr('tasks.get_waiting.status_codes.{}'.format(r.status_code))
         soup = BeautifulSoup(r.content.decode(r.encoding), 'html.parser')
         search_string = '/\?p=section&a=details&id='
+        # search_string = r'^/\?p=section&a=details&id=\d+$'  # new code not used
         s = soup.findAll('a', attrs={'href': re.compile(search_string)})
+        # s = soup.find_all('a', href=re.compile(r'^/\?p=section&a=details&id=\d+$'))  # new code not used
         return s, r
 
     @staticmethod
@@ -324,13 +327,14 @@ class SmwCentral(object):
                 if x not in data:
                     data[x] = None
             download_section = soup.find('div', class_='download-section')
-            hack.download_url = 'https:' + download_section.find('a', class_='button action')['href']
-            hack.difficulty = data['Type']
-            hack.authors = data['Author']
-            hack.length = data['Length']
-            hack.description = data['Description']
-            hack.demo = True if data['Demo'] == 'Yes' else False
-            hack.featured = True if data['Featured'] == 'Yes' else False
+            # hack.download_url = 'https:' + download_section.find('a', class_='button action')['href']  # old code
+            hack.download_url = download_section.find('a', class_='button action')['href']
+            hack.difficulty = data.get('Type', 'Unknown')
+            hack.authors = data.get('Author', 'Unknown')
+            hack.length = data.get('Length', 'Unknown')
+            hack.description = data.get('Description', 'Unknown')
+            hack.demo = True if data.get('Demo') == 'Yes' else False
+            hack.featured = True if data.get('Featured') == 'Yes' else False
         except Exception as error:
             logger.exception(error)
 

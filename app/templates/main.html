@@ -21,6 +21,8 @@
         <meta property="og:url" content="{{ request.scheme }}://{{ request.META.HTTP_HOST }}{% url 'home:index' %}">
         <meta property="og:image" content="{{ request.scheme }}://{{ request.META.HTTP_HOST }}{% static 'images/logo.png' %}">
         <meta property="og:image:type" content="image/png">
+
+        <meta name="darkreader-lock">
     {% endblock %}
 
     <title>SMW Central ROM Archive - {% block title %}{% endblock %}</title>
