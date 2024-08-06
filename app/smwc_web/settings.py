@@ -44,6 +44,7 @@ OAUTH_CLIENT_ID = config('OAUTH_CLIENT_ID')
 OAUTH_CLIENT_SECRET = config('OAUTH_CLIENT_SECRET')
 OAUTH_REDIRECT_URI = config('OAUTH_REDIRECT_URI')
 OAUTH_SCOPE = config('OAUTH_SCOPE')
+# OAUTH_SCOPE = ' '.join(config('OAUTH_SCOPE', cast=Csv()))  # new code not used
 OAUTH_RESPONSE_TYPE = 'code'
 OAUTH_GRANT_TYPE = 'authorization_code'
 
