@@ -70,13 +70,14 @@ class RomPatcher(object):
                 r.raise_for_status()
             soup = BeautifulSoup(r.content.decode(r.encoding), 'html.parser')
             download = soup.find(string='Download')
-            rom_uri = download.findPrevious()['href']
-            if not rom_uri:
+            rom_url = download.findPrevious()['href']
+            logger.debug('rom_url: %s', rom_url)
+            if not rom_url:
                 error = ('Unable to locate a ROM download at the provided url. '
                          'You can always provide the direct download URL for better results. '
                          'Provuded URL: {}'.format(rom_url))
                 raise ValueError(error)
-            rom_url = 'https:{}'.format(rom_uri)
+            #rom_url = 'https:{}'.format(rom_uri)
 
         downloaded_file_path = self.download_url_to_file(rom_url, os.path.basename(rom_url))
         return downloaded_file_path
