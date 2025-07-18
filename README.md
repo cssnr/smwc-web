@@ -6,7 +6,7 @@
 [![GitHub Top Language](https://img.shields.io/github/languages/top/cssnr/smwc-web?logo=htmx&logoColor=white)](https://github.com/cssnr/smwc-web)
 [![GitHub Org Stars](https://img.shields.io/github/stars/cssnr?style=flat&logo=github&label=org%20stars)](https://cssnr.github.io/)
 [![Discord](https://img.shields.io/discord/899171661457293343?logo=discord&logoColor=white&label=cssnr%20discord&color=7289da)](https://discord.gg/wXy6m2X8wY)
-[![Discord](https://img.shields.io/discord/111645911091814400?logo=discord&logoColor=white&label=smwc%20discord&color=7289da)](https://discord.gg/ZrRbfdE6kz)
+[![Discord](https://img.shields.io/discord/536290056571453450?logo=discord&logoColor=white&label=smwc%20discord&color=7289da)](https://discord.gg/6pzXJE5)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-72a5f2?logo=kofi&label=support)](https://ko-fi.com/cssnr)
 [![](https://repository-images.githubusercontent.com/443952841/5d9d45ca-7bf2-4773-969e-302f2ecd6903)](https://smwc.world/)
 
