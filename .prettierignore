@@ -1,0 +1,22 @@
+# App
+**/*.html
+
+# TODO fix app/static and remove this
+app/static/**
+
+# IDE
+.idea/
+.vscode/
+
+# Build
+dist/
+node_modules/
+.github/disabled/
+
+# Tools
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# Files
+package-lock.json
