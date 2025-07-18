@@ -18,94 +18,23 @@
     <meta property="og:image" content="{{ request.scheme }}://{{ request.META.HTTP_HOST }}{% static 'images/logo.png' %}">
     <meta property="og:image:type" content="image/png">
 
-    <style>
-        body, html {
-            height: 100%;
-        }
-
-        body {
-            font-family: monospace;
-            font-weight: bold;
-            font-size: 20px;
-            margin: 0;
-            overflow: hidden;
-            background-color: #222
-        }
-
-        body, #box {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #box {
-            color: #aaa;
-            height: 20em;
-            width: 30em;
-            max-width: 80%;
-            max-height: 80%;
-            background-color: #333;
-            border-radius: 0.4em;
-            border: 2px solid #555;
-            position: relative;
-            flex-direction: column;
-            transition-duration: 0.2s;
-            overflow: hidden
-        }
-
-        #box:hover, #box[drag] {
-            border-color: #38f;
-            color: #ddd
-        }
-
-        #input {
-            cursor: pointer;
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0
-        }
-
-        #display {
-            width: 100%;
-            height: 100%
-        }
-
-        select, button {
-            padding: 0.6em 0.4em;
-            margin: 0.5em;
-            width: 15em;
-            max-width: 100%;
-            font-family: monospace;
-            font-weight: bold;
-            font-size: 16px;
-            background-color: #444;
-            color: #aaa;
-            border-radius: 0.4em;
-            border: 1px solid #555;
-            cursor: pointer;
-            transition-duration: 0.2s
-        }
-
-        select:hover, button:hover {
-            background-color: #666;
-            color: #ddd
-        }
-    </style>
+    <link href="{% static 'main/css/play.css' %}" rel="stylesheet">
 </head>
-
 <body>
-<div id = box>
-    <input type = file id = input>
+
+<div id="box">
+    <input type="file" id="input">
     Drag ROM file or click here
 </div>
 
+<script src="{% static 'main/js/play.js' %}"></script>
+
 <script>
-    input.onchange = async () => {
-        const url = new Blob([input.files[0]])
-        const parts = input.files[0].name.split(".")
+    //loadSettings();
+
+    input.addEventListener("change", async () => {
+        const url = input.files[0];
+        const parts = input.files[0].name.split(".");
 
         const core = await (async (ext) => {
             if (["fds", "nes", "unif", "unf"].includes(ext))
@@ -160,7 +89,13 @@
                     "SNK NeoGeo Pocket (Color)": "ngp",
                     "Bandai WonderSwan (Color)": "ws",
                     "ColecoVision": "coleco",
-                    "Commodore 64": "vice_x64"
+                    "Commodore 64": "vice_x64",
+                    "Commodore 128": "vice_x128",
+                    "Commodore VIC20": "vice_xvic",
+                    "Commodore Plus/4": "vice_xplus4",
+                    "Commodore PET": "vice_xpet",
+                    "PlayStation Portable": "psp",
+                    "DOS": "dosbox_pure"
                 }
 
                 const button = document.createElement("button")
@@ -190,24 +125,70 @@
         sub.id = "game"
         div.id = "display"
 
-        box.remove()
+        //const top = document.getElementById("top");
+        //const version = document.getElementById("version");
+        //top.remove();
+        //version.remove();
+        box.remove();
         div.appendChild(sub)
         document.body.appendChild(div)
+
+        const cdn = window.cdn || "https://cdn.emulatorjs.org/4.2.3/data/"
 
         window.EJS_player = "#game";
         window.EJS_gameName = parts.shift();
         window.EJS_biosUrl = "";
         window.EJS_gameUrl = url;
         window.EJS_core = core;
-        window.EJS_pathtodata = "/static/data/";
+        window.EJS_pathtodata = cdn;
         window.EJS_startOnLoaded = true;
+        window.EJS_DEBUG_XX = window.debug;
+        if (window.language !== "auto") {
+            window.EJS_language = window.language;
+        }
+        if (core === "psp" || core === "dosbox_pure") {
+            window.EJS_threads = true;
+        }
 
-        script.src = "/static/data/loader.js";
+        script.src = cdn + "loader.js";
         document.body.appendChild(script);
-    }
+    });
 
     box.ondragover = () => box.setAttribute("drag", true);
     box.ondragleave = () => box.removeAttribute("drag");
+
+    //let installPrompt = null;
+    //const installButton = document.querySelector("#install");
+    //const installBox = document.querySelector("#installbox");
+    //const installBoxText = document.querySelector("#installboxtext");
+    //localStorage.setItem("pwa", "false");
+
+    //window.addEventListener("beforeinstallprompt", (event) => {
+    //    event.preventDefault();
+    //    installPrompt = event;
+    //    localStorage.setItem("pwa", "true");
+    //    installButton.textContent = "Install";
+    //    installButton.disabled = false;
+    //    console.log("Supported");
+    //});
+    //
+    //installButton.addEventListener("click", async () => {
+    //    if (!installPrompt) {
+    //        return;
+    //    }
+    //    const result = await installPrompt.prompt();
+    //    console.log(`Install prompt was: ${result.outcome}`);
+    //    installPrompt = null;
+    //});
+
+    document.addEventListener('visibilitychange', function() {
+        window.matchMedia('(display-mode: standalone)').addListener(event => {
+            if (event.matches) {
+                checkinstall(true);
+            }
+        });
+    });
 </script>
+
 </body>
 </html>
