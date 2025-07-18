@@ -1,6 +1,6 @@
 {% load static %}
 <!doctype html>
-<html lang="en" style="background-color: black">
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width = device-width, initial-scale = 1">
@@ -18,28 +18,29 @@
     <meta property="og:image" content="{{ request.scheme }}://{{ request.META.HTTP_HOST }}{% static 'images/logo.png' %}">
     <meta property="og:image:type" content="image/png">
 
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-        }
-    </style>
+    <link href="{% static 'main/css/play.css' %}" rel="stylesheet">
+    {#<style>#}
+    {#    body, html {#}
+    {#        margin: 0;#}
+    {#        padding: 0;#}
+    {#    }#}
+    {#</style>#}
 </head>
 <body>
-
-<div style="width: 100dvw; height: 100dvh; max-width: 100dvw">
+<div style="width:100%;height:100%;max-width:100%">
     <div id="game"></div>
 </div>
 
 <script>
-    EJS_player = "#game"
-    EJS_core = "snes"
-    EJS_pathtodata = "/static/data/"
-    EJS_gameUrl = "{{ rom }}"
-    EJS_startOnLoaded = true
+    EJS_player = "#game";
+    EJS_core = "snes";
+    EJS_gameName = "SMWC Online Play";
+    EJS_color = "#0064ff";
+    EJS_startOnLoaded = true;
+    EJS_pathtodata = "https://cdn.emulatorjs.org/4.2.3/data/";
+    EJS_gameUrl = "{{ rom }}";
 </script>
 
-<script src="/static/data/loader.js"></script>
-
+<script src="https://cdn.emulatorjs.org/4.2.3/data/loader.js"></script>
 </body>
 </html>
