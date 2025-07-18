@@ -16,3 +16,22 @@ sentry-sdk
 statsd
 watchdog
 Werkzeug
+
+
+# Development
+
+django-debug-toolbar<6
+django-extensions
+watchdog
+Werkzeug
+
+
+# Tools
+
+#bandit
+#black
+#coverage
+#flake8
+#mypy
+#ruff
+yamllint

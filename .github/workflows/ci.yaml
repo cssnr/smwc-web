@@ -1,0 +1,177 @@
+name: "CI"
+
+on:
+  workflow_dispatch:
+    inputs:
+      build:
+        description: "Run Build"
+        type: boolean
+        default: true
+      deploy:
+        description: "Run Deploy"
+        type: boolean
+        default: true
+      cleanup:
+        description: "Run Cleanup"
+        type: boolean
+        default: true
+      env:
+        description: "Environment to Deploy"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - prod
+
+  push:
+    branches-ignore:
+      - master
+    paths:
+      - ".github/workflows/ci.yaml"
+      - "app/**"
+      - "nginx/**"
+      - "gulpfile.js"
+      - "package*.json"
+      - "pyproject.toml"
+      - "docker-compose-swarm.yaml"
+
+env:
+  config-path: ${{ github.repository_owner }}/${{ github.event.repository.name }}
+  #purge-domain: cssnr.com
+  stack-name: ${{ inputs.env || 'dev' }}_${{ github.repository_owner }}-${{ github.event.repository.name }}
+  env-name: ${{ inputs.env || 'dev' }}
+  build: ${{ github.event_name == 'push' && true || inputs.build }}
+  deploy: ${{ github.event_name == 'push' && true || inputs.deploy }}
+  cleanup: ${{ github.event_name == 'push' && true || inputs.cleanup }}
+
+concurrency:
+  group: ${{ inputs.env || 'dev' }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: "CI"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: ${{ !contains(github.event.head_commit.message, '#noci') }}
+    concurrency:
+      group: ci
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+
+      - name: "Debug event.json"
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: |
+          cat "${GITHUB_EVENT_PATH}"
+
+      - name: "Debug"
+        continue-on-error: true
+        run: |
+          echo group: ${{ inputs.env || 'dev' }}
+          echo github.event_name: ${{ github.event_name }}
+
+          echo inputs.build: ${{ inputs.build }}
+          echo inputs.deploy: ${{ inputs.deploy }}
+          echo inputs.cleanup: ${{ inputs.cleanup }}
+
+          echo env.build: ${{ env.build }}
+          echo env.deploy: ${{ env.deploy }}
+          echo env.cleanup: ${{ env.cleanup }}
+
+          echo env.stack-name: ${{ env.stack-name }}
+          echo env.env-name: ${{ env.env-name }}
+
+      #- name: "Setup Node 22"
+      #  if: ${{ env.build == 'true' }}
+      #  uses: actions/setup-node@v4
+      #  with:
+      #    node-version: 22
+
+      #- name: "Set Cache Directory"
+      #  if: ${{ env.build == 'true' }}
+      #  id: npm-cache-dir
+      #  shell: bash
+      #  run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+
+      #- name: "Node Cache"
+      #  if: ${{ env.build == 'true' }}
+      #  uses: actions/cache@v4
+      #  id: npm-cache
+      #  with:
+      #    path: ${{ steps.npm-cache-dir.outputs.dir }}
+      #    key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      #    restore-keys: |
+      #      ${{ runner.os }}-node-
+
+      #- name: "Node Cache Hit"
+      #  if: ${{ steps.npm-cache.outputs.cache-hit }}
+      #  run: |
+      #    echo "dir: '${{ steps.npm-cache-dir.outputs.dir }}'"
+      #    echo "cache-hit: '${{ steps.npm-cache.outputs.cache-hit }}'"
+
+      #- name: "Install Node"
+      #  if: ${{ env.build == 'true' }}
+      #  run: |
+      #    npm install
+
+      #- name: "Update SW Cache Version"
+      #  if: ${{ env.build == 'true' }}
+      #  env:
+      #    SERVICE_WORKER: app/static/js/sw.js
+      #  run: |
+      #    echo "Updating SW Cache to: v${GITHUB_RUN_NUMBER}"
+      #    sed -i "0,/v1/s//v${GITHUB_RUN_NUMBER}/" ${SERVICE_WORKER}
+      #    head ${SERVICE_WORKER} -n 4
+
+      ## TODO: This is an old artifact still used to update volume mount
+      #- name: "Find and Replace"
+      #  uses: jacobtomlinson/gha-find-replace@v3
+      #  with:
+      #    find: "STACK_NAME"
+      #    replace: ${{ env.stack-name }}
+      #    include: docker-compose-swarm.yaml
+      #    regex: false
+
+      - name: "Debug docker-compose-swarm.yaml"
+        continue-on-error: true
+        run: |
+          cat docker-compose-swarm.yaml
+
+      # END Custom - move to custom workflow
+
+      - name: "Swarm Build Action"
+        if: ${{ env.build == 'true' }}
+        #if: ${{ github.event_name == 'push' && true || inputs.build }}
+        uses: hosted-domains/swarm-build-action@master
+        with:
+          version: ${{ env.env-name }}
+          username: ${{ vars.GHCR_USER }}
+          password: ${{ secrets.GHCR_PASS }}
+
+      - name: "Portainer Deploy Action"
+        if: ${{ env.deploy == 'true' }}
+        #if: ${{ github.event_name == 'push' && true || inputs.deploy }}
+        uses: hosted-domains/portainer-deploy-action@master
+        with:
+          version: ${{ env.env-name }}
+          stack-name: ${{ env.stack-name }}
+          config-file: services/${{ env.config-path }}/${{ env.env-name }}.env
+          config-ssh-key: ${{ secrets.SERVICE_CONFIGS_KEY }}
+          portainer-url: ${{ secrets.PORTAINER_URL }}
+          portainer-token: ${{ secrets.PORTAINER_TOKEN }}
+
+      #- name: "Purge Cache"
+      #  if: ${{ env.cleanup == 'true' }}
+      #  #if: ${{ github.event_name == 'push' && true || inputs.cleanup }}
+      #  uses: cssnr/cloudflare-purge-cache-action@v2
+      #  with:
+      #    token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      #    domains: ${{ env.purge-domain }}

@@ -1,18 +1,27 @@
-[![Discord](https://img.shields.io/discord/111645911091814400?color=7289da&label=discord&logo=discord&logoColor=white&style=plastic)](https://discord.gg/ZrRbfdE6kz)
+[![CI](https://img.shields.io/github/actions/workflow/status/cssnr/smwc-web/ci.yaml?logo=github&label=ci)](https://github.com/cssnr/smwc-web/actions/workflows/ci.yaml)
+[![Lint](https://img.shields.io/github/actions/workflow/status/cssnr/smwc-web/lint.yaml?logo=github&label=lint)](https://github.com/cssnr/smwc-web/actions/workflows/lint.yaml)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/924fb85c7d2c4b67805aeb2cfd47fea4)](https://app.codacy.com/gh/cssnr/smwc-web/dashboard)
+[![GitHub Repo Stars](https://img.shields.io/github/stars/cssnr/smwc-web?style=flat&logo=github)](https://github.com/cssnr/smwc-web/stargazers)
+[![GitHub Last Commit](https://img.shields.io/github/last-commit/cssnr/smwc-web?logo=github&label=updated)](https://github.com/cssnr/smwc-web/graphs/commit-activity)
+[![GitHub Top Language](https://img.shields.io/github/languages/top/cssnr/smwc-web?logo=htmx&logoColor=white)](https://github.com/cssnr/smwc-web)
+[![GitHub Org Stars](https://img.shields.io/github/stars/cssnr?style=flat&logo=github&label=org%20stars)](https://cssnr.github.io/)
+[![Discord](https://img.shields.io/discord/899171661457293343?logo=discord&logoColor=white&label=cssnr%20discord&color=7289da)](https://discord.gg/wXy6m2X8wY)
+[![Discord](https://img.shields.io/discord/111645911091814400?logo=discord&logoColor=white&label=smwc%20discord&color=7289da)](https://discord.gg/ZrRbfdE6kz)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-72a5f2?logo=kofi&label=support)](https://ko-fi.com/cssnr)
 [![](https://repository-images.githubusercontent.com/443952841/5d9d45ca-7bf2-4773-969e-302f2ecd6903)](https://smwc.world/)
-# SMW Central ROM Archive
 
-[![build status](https://git.cssnr.com/shane/smwc-web/badges/master/build.svg)](https://git.cssnr.com/shane/smwc-web/commits/master) [![coverage report](https://git.cssnr.com/shane/smwc-web/badges/master/coverage.svg)](https://git.cssnr.com/shane/smwc-web/commits/master)
+# SMW Central ROM Archive
 
 This tool downloads all Super Mario World ROM's that are uploaded to www.smwcentral.net in the awaiting moderation section and archives them for download.
 
-### Frameworks
-
-- Django 4 https://www.djangoproject.com/
-- Bootstrap 4 http://getbootstrap.com/
-- Font Awesome 5 http://fontawesome.io/
+> [!TIP]  
+> You can now Patch and Play ROM's Online with the click of a button using the SMWC Web Extension!  
+> Download from: [Google](https://chromewebstore.google.com/detail/smwc-web-extension/foalfafgmnglcgpgkhhmcfhjgmdcjide) | [Mozilla](https://addons.mozilla.org/addon/smwc-web-extension) | [GitHub](https://github.com/cssnr/smwc-web-extension)
 
 ## Development
+
+> [!WARNING]  
+> These docs are out-of-date but serve as a general guide.
 
 ### Deployment
 
@@ -40,19 +49,13 @@ docker compose up --build -d --remove-orphans
 docker compose logs -f
 ```
 
-*Note: Make sure to update the `settings.env` with the necessary details...*
+_Note: Make sure to update the `settings.env` with the necessary details..._
 
-### Copying This Project
+# Contributing
 
-Use the Fork button, or to clone a clean copy of this project into your repository:
+Please consider making a donation to support the development of this project
+and [additional](https://cssnr.com/) open source projects.
 
-```
-git clone https://git.cssnr.com/shane/smwc-web.git
-cd smwc-web
-rm -rf .git
-git init
-git remote add origin https://github.com/your-org/your-repo.git
-git push -u origin master
-```
+[![Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/cssnr)
 
-*Note: make sure to replace `your-org/your-repo.git` with your actual repository location...*
+For a full list of current projects visit: [https://cssnr.github.io/](https://cssnr.github.io/)

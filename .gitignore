@@ -1,9 +1,14 @@
 .idea/
 *.iml
+.vscode/
+**/dist/
 **/__pycache__/
 **/venv/
 *.pyc
 .coverage
-*.log
-*.sqlite3
+.env
+.secrets
+.vars
 settings.env
+*.sqlite3
+node_modules/

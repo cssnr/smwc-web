@@ -1,0 +1,7 @@
+extends: relaxed
+ignore:
+  - node_modules/
+  - app/api/templates/
+rules:
+  line-length:
+    max: 119

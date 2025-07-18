@@ -1,11 +1,9 @@
-version: "3.7"
+version: "3.8"
 
 services:
   nginx:
-    build:
-      context: ./nginx
-      network: host
-    image: ${REGISTRY_HOST}/shane/smwc-web-nginx:${VERSION}
+    build: nginx
+    image: ghcr.io/cssnr/smwc-web-nginx:${VERSION:-latest}
     deploy:
       mode: global
       resources:
@@ -16,16 +14,16 @@ services:
         - "traefik.enable=true"
         - "traefik.docker.network=traefik-public"
         - "traefik.constraint-label=traefik-public"
-        - "traefik.http.routers.STACK_NAME-http.rule=Host(${TRAEFIK_HOST})"
-        - "traefik.http.routers.STACK_NAME-http.entrypoints=http"
-        - "traefik.http.routers.STACK_NAME-http.middlewares=https-redirect"
-        - "traefik.http.routers.STACK_NAME-https.rule=Host(${TRAEFIK_HOST})"
-        - "traefik.http.routers.STACK_NAME-https.entrypoints=https"
-        - "traefik.http.routers.STACK_NAME-https.tls=true"
-        - "traefik.http.services.STACK_NAME.loadbalancer.server.port=80"
-        - "traefik.http.services.STACK_NAME.loadbalancer.server.scheme=http"
+        - "traefik.http.routers.${STACK_NAME}-http.rule=Host(${TRAEFIK_HOST})"
+        - "traefik.http.routers.${STACK_NAME}-http.entrypoints=http"
+        - "traefik.http.routers.${STACK_NAME}-http.middlewares=https-redirect"
+        - "traefik.http.routers.${STACK_NAME}-https.rule=Host(${TRAEFIK_HOST})"
+        - "traefik.http.routers.${STACK_NAME}-https.entrypoints=https"
+        - "traefik.http.routers.${STACK_NAME}-https.tls=true"
+        - "traefik.http.services.${STACK_NAME}.loadbalancer.server.port=80"
+        - "traefik.http.services.${STACK_NAME}.loadbalancer.server.scheme=http"
     volumes:
-      - /data/docker/STACK_NAME:/data
+      - /data/docker/${STACK_NAME}:/data
     secrets:
       - source: cssnr_basic_http_auth
         target: /etc/nginx/auth.users
@@ -36,11 +34,68 @@ services:
       - net-internal
 
   app:
-    build:
-      context: ./app
-      network: host
-    image: ${REGISTRY_HOST}/shane/smwc-web-app:${VERSION}
-    env_file: ${ENV_FILE}
+    build: app
+    image: ghcr.io/cssnr/smwc-web-app:${VERSION:-latest}
+    environment: &environment
+      TZ: ${TZ}
+      DEBUG: ${DEBUG}
+      APP_LOG_LEVEL: ${APP_LOG_LEVEL}
+      DJANGO_LOG_LEVEL: ${DJANGO_LOG_LEVEL}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      SESSION_COOKIE_AGE: ${SESSION_COOKIE_AGE}
+      SECRET_KEY: ${SECRET_KEY}
+      STATIC_ROOT: ${STATIC_ROOT}
+      MEDIA_ROOT: ${MEDIA_ROOT}
+      LANGUAGE_CODE: ${LANGUAGE_CODE}
+      USE_TZ: ${USE_TZ}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS}
+      USE_X_FORWARDED_HOST: ${USE_X_FORWARDED_HOST}
+      SECURE_REFERRER_POLICY: ${SECURE_REFERRER_POLICY}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASS: ${DATABASE_PASS}
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_PORT: ${DATABASE_PORT}
+      OAUTH_CLIENT_ID: ${OAUTH_CLIENT_ID}
+      OAUTH_CLIENT_SECRET: ${OAUTH_CLIENT_SECRET}
+      OAUTH_REDIRECT_URI: ${OAUTH_REDIRECT_URI}
+      OAUTH_SCOPE: ${OAUTH_SCOPE}
+      REDIS_IGNORE_EXCEPTIONS: ${REDIS_IGNORE_EXCEPTIONS}
+      CACHE_BACKEND: ${CACHE_BACKEND}
+      CACHE_LOCATION: ${CACHE_LOCATION}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
+      FLOWER_PORT: ${FLOWER_PORT}
+      FLOWER_URL_PREFIX: ${FLOWER_URL_PREFIX}
+      FLOWER_PURGE_OFFLINE_WORKERS: ${FLOWER_PURGE_OFFLINE_WORKERS}
+      FLOWER_AUTO_REFRESH: ${FLOWER_AUTO_REFRESH}
+      STATSD_PREFIX: ${STATSD_PREFIX}
+      STATSD_PORT: ${STATSD_PORT}
+      STATSD_HOST: ${STATSD_HOST}
+      STATSD_CLIENT: ${STATSD_CLIENT}
+      SENTRY_URL: ${SENTRY_URL}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT}
+      SENTRY_DEBUG: ${SENTRY_DEBUG}
+      SENTRY_SAMPLE_RATE: ${SENTRY_SAMPLE_RATE}
+      BITLY_ACCESS_TOKEN: ${BITLY_ACCESS_TOKEN}
+      FTP_HOST: ${FTP_HOST}
+      FTP_USER: ${FTP_USER}
+      FTP_PASS: ${FTP_PASS}
+      FTP_DIR: ${FTP_DIR}
+      FTP_KEEP_FILES: ${FTP_KEEP_FILES}
+      APP_TMP_DIR: ${APP_TMP_DIR}
+      APP_ROMS_DIR: ${APP_ROMS_DIR}
+      APP_FLIPS_PATH: ${APP_FLIPS_PATH}
+      APP_SITE_URL: ${APP_SITE_URL}
+      APP_STATUS_URL: ${APP_STATUS_URL}
+      APP_PATCHER_URL: ${APP_PATCHER_URL}
+      APP_ROMS_URL: ${APP_ROMS_URL}
+      APP_SMWC_URL: ${APP_SMWC_URL}
+      APP_DISCORD_INVITE: ${APP_DISCORD_INVITE}
+      SUPER_USERS: ${SUPER_USERS}
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD}
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL}
     command: "gunicorn smwc_web.wsgi:application -w 2 -b 0.0.0.0:9000"
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:9000/app-health-check/"]
@@ -55,24 +110,25 @@ services:
           cpus: "2.0"
           memory: 400M
     volumes:
-      - /data/docker/STACK_NAME:/data
+      - /data/docker/${STACK_NAME}:/data
     depends_on:
       - redis
     networks:
       - net-internal
 
   worker:
-    image: ${REGISTRY_HOST}/shane/smwc-web-app:${VERSION}
-    env_file: ${ENV_FILE}
+    image: ghcr.io/cssnr/smwc-web-app:${VERSION:-latest}
+    environment:
+      <<: *environment
     command: "celery -A smwc_web worker -l INFO -c 2"
     deploy:
       replicas: 1
       resources:
         limits:
           cpus: "2.0"
-          memory: 250M
+          memory: 400M
     volumes:
-      - /data/docker/STACK_NAME:/data
+      - /data/docker/${STACK_NAME}:/data
     depends_on:
       - app
       - redis
@@ -80,15 +136,16 @@ services:
       - net-internal
 
   beat:
-    image: ${REGISTRY_HOST}/shane/smwc-web-app:${VERSION}
-    env_file: ${ENV_FILE}
+    image: ghcr.io/cssnr/smwc-web-app:${VERSION:-latest}
+    environment:
+      <<: *environment
     command: "celery -A smwc_web beat -l INFO -S django"
     deploy:
       replicas: 1
       resources:
         limits:
           cpus: "2.0"
-          memory: 150M
+          memory: 250M
     depends_on:
       - app
       - redis
@@ -97,7 +154,8 @@ services:
 
   #  flower:
   #    image: mher/flower:1.2
-  #    env_file: ${ENV_FILE}
+  #  environment:
+  #    <<: *environment
   #    deploy:
   #    replicas: 1
   #    resources:
