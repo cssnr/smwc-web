@@ -1,7 +1,7 @@
 FROM python:3.11-alpine AS base
 
 ENV TZ=UTC
-ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONDONTWRITEBYTECODE=1
 
 RUN apk add --update --no-cache alpine-sdk mysql-dev
 
@@ -13,7 +13,7 @@ RUN python3 -m pip install --no-cache-dir --upgrade pip  &&\
 FROM python:3.11-alpine
 
 ENV TZ=UTC
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONUNBUFFERED=1
 
 COPY --from=base /usr/local/lib/python3.11/site-packages/ /usr/local/lib/python3.11/site-packages/
 COPY --from=base /usr/local/bin/ /usr/local/bin/

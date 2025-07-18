@@ -1,6 +1,7 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/cssnr/smwc-web/ci.yaml?logo=github&label=ci)](https://github.com/cssnr/smwc-web/actions/workflows/ci.yaml)
 [![Lint](https://img.shields.io/github/actions/workflow/status/cssnr/smwc-web/lint.yaml?logo=github&label=lint)](https://github.com/cssnr/smwc-web/actions/workflows/lint.yaml)
-[![Codecov](https://codecov.io/gh/cssnr/smwc-web/graph/badge.svg?token=6YSWJ1E6BJ)](https://codecov.io/gh/cssnr/smwc-web)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/924fb85c7d2c4b67805aeb2cfd47fea4)](https://app.codacy.com/gh/cssnr/smwc-web/dashboard)
+[![GitHub Repo Stars](https://img.shields.io/github/stars/cssnr/smwc-web?style=flat&logo=github)](https://github.com/cssnr/smwc-web/stargazers)
 [![GitHub Last Commit](https://img.shields.io/github/last-commit/cssnr/smwc-web?logo=github&label=updated)](https://github.com/cssnr/smwc-web/graphs/commit-activity)
 [![GitHub Top Language](https://img.shields.io/github/languages/top/cssnr/smwc-web?logo=htmx&logoColor=white)](https://github.com/cssnr/smwc-web)
 [![GitHub Org Stars](https://img.shields.io/github/stars/cssnr?style=flat&logo=github&label=org%20stars)](https://cssnr.github.io/)
@@ -19,10 +20,10 @@ This tool downloads all Super Mario World ROM's that are uploaded to www.smwcent
 
 ## Development
 
-### Deployment
-
 > [!WARNING]  
 > These docs are out-of-date but serve as a general guide.
+
+### Deployment
 
 To deploy this project on your local server:
 
