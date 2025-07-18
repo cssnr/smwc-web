@@ -20,8 +20,8 @@ services:
         - "traefik.http.services.STACK_NAME.loadbalancer.server.port=80"
         - "traefik.http.services.STACK_NAME.loadbalancer.server.scheme=http"
     volumes:
-      - ${APP_FILES_STATIC:-./app/static}:/data/static
       - data_dir:/data
+      - ${APP_FILES_STATIC:-./app/static}:/data/static
       - ${APP_FILES:-./app}:/app
     secrets:
       - source: cssnr_basic_http_auth
@@ -39,8 +39,8 @@ services:
     deploy:
       mode: global
     volumes:
-      - ${APP_FILES_STATIC:-./app/static}:/data/static
       - data_dir:/data
+      - ${APP_FILES_STATIC:-./app/static}:/data/static
       - ${APP_FILES:-./app}:/app
     depends_on:
       - redis

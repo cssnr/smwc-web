@@ -131,14 +131,14 @@ jobs:
       #    sed -i "0,/v1/s//v${GITHUB_RUN_NUMBER}/" ${SERVICE_WORKER}
       #    head ${SERVICE_WORKER} -n 4
 
-      # TODO: This is an old artifact still used to update volume mount
-      - name: "Find and Replace"
-        uses: jacobtomlinson/gha-find-replace@v3
-        with:
-          find: "STACK_NAME"
-          replace: ${{ env.stack-name }}
-          include: docker-compose-swarm.yaml
-          regex: false
+      ## TODO: This is an old artifact still used to update volume mount
+      #- name: "Find and Replace"
+      #  uses: jacobtomlinson/gha-find-replace@v3
+      #  with:
+      #    find: "STACK_NAME"
+      #    replace: ${{ env.stack-name }}
+      #    include: docker-compose-swarm.yaml
+      #    regex: false
 
       - name: "Debug docker-compose-swarm.yaml"
         continue-on-error: true
