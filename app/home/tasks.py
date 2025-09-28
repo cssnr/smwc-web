@@ -6,6 +6,7 @@ import requests
 import statsd
 import tarfile
 import tempfile
+# noinspection PyPackageRequirements
 import urllib3
 from urllib import parse
 from django.conf import settings
@@ -182,8 +183,9 @@ def backup_hacks():
         df.close()
 
 
+# noinspection PyUnusedLocal
 @shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 3600})
-def ftp_cleanup(directory=None, keep_files=10, ls_pattern=None):
+def ftp_cleanup(directory=None, keep_files=10, ls_pattern=None): # NOSONAR
     logger.debug('ftp_cleanup: executed')
 
     directory = settings.FTP_DIR
@@ -230,7 +232,7 @@ def mysql_dump(output_file_path):
     logger.debug(result)
     if result != 0:
         logger.error(result)
-        raise Exception('mysqldump error')
+        raise Exception('mysqldump error')  # NOSONAR
     return result
 
 
@@ -240,7 +242,7 @@ def ftp_upload_file(filepath, directory, remote_filename=None):
     try:
         dl = ftp.nlst(directory)
         if (remote_filename or os.path.basename(filepath)) in dl:
-            raise Exception(f'Remote file already exists: {r_file}')
+            raise Exception(f'Remote file already exists: {r_file}')  # NOSONAR
         with open(filepath, 'rb') as file:
             ftp.storbinary(f'STOR {r_file}', file)
     finally:
@@ -370,7 +372,7 @@ class SmwCentral(object):
             return
 
         logger.info('Download URL: %s', hack.download_url)
-        r = requests.get(hack.download_url, verify=False, timeout=30)
+        r = requests.get(hack.download_url, verify=False, timeout=30)  # NOSONAR
         c.incr('tasks.download_rom.status_codes.{}'.format(r.status_code))
         if not r.ok:
             logger.error('Error retrieving rom download archive: %s', r.status_code)

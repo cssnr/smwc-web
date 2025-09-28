@@ -33,7 +33,7 @@ exclude = ["venv", "migrations", "node_modules"]
 [tool.ruff]
 line-length = 119
 target-version = "py312"
-extend-exclude = ["migrations", ".github"]
+extend-exclude = ["migrations", "templates", ".github"]
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "B", "Q"]

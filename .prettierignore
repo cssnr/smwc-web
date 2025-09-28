@@ -1,22 +1,21 @@
-# App
-**/*.html
-
-# TODO fix app/static and remove this
-app/static/**
-
 # IDE
 .idea/
 .vscode/
+
+# Tools
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+eslint_report.json
 
 # Build
 dist/
 node_modules/
 .github/disabled/
 
-# Tools
-.ruff_cache/
-.mypy_cache/
-.pytest_cache/
-
 # Files
-package-lock.json
+.github/pull_request_template.md
+
+# App
+**/*.html
+app/static/**
