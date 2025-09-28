@@ -1,14 +1,15 @@
 .idea/
 *.iml
 .vscode/
+node_modules/
 **/dist/
 **/__pycache__/
 **/venv/
 *.pyc
 .coverage
+eslint_report.json
 .env
 .secrets
 .vars
 settings.env
 *.sqlite3
-node_modules/
