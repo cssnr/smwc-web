@@ -31,9 +31,8 @@ on:
       - ".github/workflows/ci.yaml"
       - "app/**"
       - "nginx/**"
-      - "gulpfile.js"
       - "package*.json"
-      - "pyproject.toml"
+      - "requirements*.txt"
       - "docker-compose-swarm.yaml"
 
 env:
@@ -44,6 +43,7 @@ env:
   build: ${{ github.event_name == 'push' && true || inputs.build }}
   deploy: ${{ github.event_name == 'push' && true || inputs.deploy }}
   cleanup: ${{ github.event_name == 'push' && true || inputs.cleanup }}
+  url: ${{ inputs.env == 'prod' && 'https://smwc.world/' || 'https://dev.smwc.world/' }}
 
 concurrency:
   group: ${{ inputs.env || 'dev' }}
@@ -61,6 +61,10 @@ jobs:
     permissions:
       contents: read
       packages: write
+
+    environment:
+      name: ${{ env.env-name }}
+      url: ${{ env.url }}
 
     steps:
       - name: "Checkout"
@@ -88,6 +92,7 @@ jobs:
 
           echo env.stack-name: ${{ env.stack-name }}
           echo env.env-name: ${{ env.env-name }}
+          echo env.url: ${{ env.url }}
 
       #- name: "Setup Node 22"
       #  if: ${{ env.build == 'true' }}
