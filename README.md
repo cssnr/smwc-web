@@ -10,8 +10,8 @@
 [![GitHub Forks](https://img.shields.io/github/forks/cssnr/smwc-web?style=flat&logo=github)](https://github.com/cssnr/smwc-web/forks)
 [![GitHub Repo Stars](https://img.shields.io/github/stars/cssnr/smwc-web?style=flat&logo=github)](https://github.com/cssnr/smwc-web/stargazers)
 [![GitHub Org Stars](https://img.shields.io/github/stars/cssnr?style=flat&logo=github&label=org%20stars)](https://cssnr.github.io/)
-[![Discord](https://img.shields.io/discord/899171661457293343?logo=discord&logoColor=white&label=cssnr%20discord&color=7289da)](https://discord.gg/wXy6m2X8wY)
-[![Discord](https://img.shields.io/discord/536290056571453450?logo=discord&logoColor=white&label=smwc%20discord&color=7289da)](https://discord.gg/6pzXJE5)
+[![Discord](https://img.shields.io/discord/536290056571453450?logo=discord&logoColor=white&label=smwc&color=7289da)](https://discord.gg/6pzXJE5)
+[![Discord](https://img.shields.io/discord/899171661457293343?logo=discord&logoColor=white&label=cssnr&color=7289da)](https://discord.gg/wXy6m2X8wY)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-72a5f2?logo=kofi&label=support)](https://ko-fi.com/cssnr)
 [![](https://repository-images.githubusercontent.com/443952841/5d9d45ca-7bf2-4773-969e-302f2ecd6903)](https://smwc.world/)
 
@@ -38,7 +38,7 @@ For general help or to request a feature, see:
 If you are experiencing an issue/bug or getting unexpected results, you can:
 
 - Report an Issue: https://github.com/cssnr/smwc-web/issues
-- Chat with us on Discord: https://discord.gg/wXy6m2X8wY
+- Chat with us on Discord: https://discord.gg/6pzXJE5
 - Provide General Feedback: [https://cssnr.github.io/feedback/](https://cssnr.github.io/feedback/?app=SMWC%20Web)
 
 For more information, see the CSSNR [SUPPORT.md](https://github.com/cssnr/.github/blob/master/.github/SUPPORT.md#support).
@@ -51,3 +51,5 @@ and [additional](https://cssnr.com/) open source projects.
 [![Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/cssnr)
 
 If you would like to submit a PR, please review the [CONTRIBUTING.md](#contributing-ov-file).
+
+For a full list of current projects visit: [https://cssnr.github.io/](https://cssnr.github.io/)
