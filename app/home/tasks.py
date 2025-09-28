@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup
 from celery import shared_task
 from home.models import Hacks, Webhooks
 
-logger = logging.getLogger('celery')
+logger = logging.getLogger('app')
 c = statsd.StatsClient(settings.STATSD_HOST, settings.STATSD_PORT, settings.STATSD_PREFIX)
 urllib3.disable_warnings()
 
@@ -25,7 +25,15 @@ urllib3.disable_warnings()
 @shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 1, 'countdown': 240})
 def process_hacks():
     logger.debug('process_hacks: executed')
-    waiting, r = SmwCentral.get_waiting()
+    # waiting, r = SmwCentral.get_waiting()
+    new_hacks = 'https://www.smwcentral.net/ajax.php?a=getsectionlist&s=smwhacks&u=1'
+    r = requests.get(new_hacks, timeout=30)
+    logger.info('r.status_code: %s', r.status_code)
+    data = r.json()
+    logger.debug('data: %s', data)
+    waiting = data['data']
+    logger.debug('waiting: %s', len(waiting))
+
     if not waiting:
         logger.debug('No waiting hacks.')
         return 'No waiting hacks.'
@@ -35,29 +43,37 @@ def process_hacks():
     for i, h in enumerate(waiting):
         logger.debug('Processing hack %s/%s.', i, len(waiting))
         try:
-            href = h['href']
-            logger.debug('href: %s', href)
-            logger.debug('text: %s', h.text)
-            hack_url = href if href.startswith('http') else settings.APP_SMWC_URL + href
-            logger.debug('hack_url: %s', hack_url)
-            query = parse.parse_qs(parse.urlparse(hack_url).query)
-            smwc_id = SmwCentral.verify_hack(h, query['id'][0].strip())
-            if not smwc_id:
-                logger.debug('Unable to verify hack: %s', h.text)
-                continue
+            # href = h['href']
+            # logger.debug('href: %s', href)
+            # logger.debug('text: %s', h.text)
+            # hack_url = href if href.startswith('http') else settings.APP_SMWC_URL + href
+            # logger.debug('hack_url: %s', hack_url)
+            # query = parse.parse_qs(parse.urlparse(hack_url).query)
+            # smwc_id = SmwCentral.verify_hack(h, query['id'][0].strip())
+            # if not smwc_id:
+            #     logger.debug('Unable to verify hack: %s', h.text)
+            #     continue
 
-            logger.debug('smwc_id: %s', smwc_id)
-            hack, created = Hacks.objects.get_or_create(smwc_id=smwc_id)
+            logger.debug('smwc_id: %s', h['id'])
+            hack, created = Hacks.objects.get_or_create(smwc_id=h['id'])
             logger.debug('created: %s', created)
             if not created:
-                logger.debug('not created smwc_id: %s', smwc_id)
+                logger.debug('not created hack.smwc_id: %s', hack.smwc_id)
                 continue
 
             logger.debug('tasks.process_hacks.created')
             c.incr('tasks.process_hacks.created')
-            hack.name = h.text
-            hack.smwc_href = href
-            SmwCentral.update_hack_info(hack)
+            hack.name = h['name']
+            hack.smwc_href = '/?p=section&a=details&id=' + str(hack.smwc_id)
+            # SmwCentral.update_hack_info(hack)
+            hack.download_url = h['download_url']
+            hack.difficulty = h['fields']['type']
+            hack.authors = ", ".join(x["name"] for x in h["authors"])
+            hack.length = h['fields']['length']
+            hack.description = h['raw_fields']['description']
+            hack.demo = h['raw_fields']['demo']
+            hack.featured = h['raw_fields']['hof']
+
             SmwCentral.download_rom(hack)
             hack.save()
             process_alert.delay(hack.pk)
