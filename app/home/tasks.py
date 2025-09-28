@@ -2,7 +2,6 @@ import datetime
 import ftplib
 import logging
 import os
-import re
 import requests
 import statsd
 import tarfile
@@ -13,7 +12,6 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.cache.utils import make_template_fragment_key
 from django.utils.text import slugify
-from bs4 import BeautifulSoup
 from celery import shared_task
 from home.models import Hacks, Webhooks
 
@@ -30,18 +28,21 @@ def process_hacks():
     r = requests.get(new_hacks, timeout=30)
     logger.info('r.status_code: %s', r.status_code)
     data = r.json()
-    logger.debug('data: %s', data)
-    waiting = data['data']
-    logger.debug('waiting: %s', len(waiting))
-
+    # logger.debug('data: %s', data)
+    waiting = data.get('data')
     if not waiting:
         logger.debug('No waiting hacks.')
         return 'No waiting hacks.'
 
-    logger.debug('Total Waiting Hacks: %s\n%s', len(waiting), waiting)
+    logger.debug('Total Waiting Hacks: %s', len(waiting))
     errors = 0
     for i, h in enumerate(waiting):
-        logger.debug('Processing hack %s/%s.', i, len(waiting))
+        smwc_id = h.get('id')
+        logger.debug('Processing hack %s/%s - %s', i, len(waiting), smwc_id)
+        if not smwc_id:
+            logger.warning('No ID for Hack: %s', h)
+            continue
+
         try:
             # href = h['href']
             # logger.debug('href: %s', href)
@@ -54,9 +55,8 @@ def process_hacks():
             #     logger.debug('Unable to verify hack: %s', h.text)
             #     continue
 
-            logger.debug('smwc_id: %s', h['id'])
-            hack, created = Hacks.objects.get_or_create(smwc_id=h['id'])
-            logger.debug('created: %s', created)
+            hack, created = Hacks.objects.get_or_create(smwc_id=smwc_id)
+            # logger.debug('created: %s', created)
             if not created:
                 logger.debug('not created hack.smwc_id: %s', hack.smwc_id)
                 continue
@@ -108,19 +108,28 @@ def process_alert(hack_pk):
         send_alert.delay(hook.id, message)
 
 
-@shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 60})
-def send_alert(hook_pk, message):
+@shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 60})
+def send_alert(self, hook_pk, message):
     try:
         hook = Webhooks.objects.get(pk=hook_pk)
         body = {'content': message}
         r = requests.post(hook.webhook_url, json=body, timeout=30)
         c.incr('tasks.send_alert.status_codes.{}'.format(r.status_code))
         if r.status_code == 404:
-            logger.warning('Hook %s removed by owner %s - %s',
+            logger.info('Hook %s removed by owner %s - %s',
                            hook.hook_id, hook.owner_username, hook.webhook_url)
             hook.delete()
             c.incr('tasks.send_alert.hook_delete')
             return '404: Hook removed by owner and deleted from database.'
+
+        if r.status_code == 429:
+            try:
+                data = r.json()
+                retry_after = data.get('retry_after', 61)
+            except ValueError:
+                retry_after = 62
+            logger.info('429: Discord Rate Limited - retry_after: %s', retry_after)
+            raise self.retry(exc=Exception('429 Too Many Requests'), countdown=retry_after)
 
         if not r.ok:
             logger.warning(r.content.decode(r.encoding))
@@ -283,76 +292,76 @@ def gen_discord_message(hack):
 
 
 class SmwCentral(object):
-    @staticmethod
-    def get_waiting():
-        # new_hacks = 'https://www.smwcentral.net/?p=section&s=smwhacks&u=1'  # old code
-        new_hacks = 'https://www.smwcentral.net/?p=section&s=smwhacks&u=1&locale=en-US'
-        r = requests.get(new_hacks, timeout=30)
-        c.incr('tasks.get_waiting.status_codes.{}'.format(r.status_code))
-        soup = BeautifulSoup(r.content.decode(r.encoding), 'html.parser')
-        search_string = '/\?p=section&a=details&id='
-        # search_string = r'^/\?p=section&a=details&id=\d+$'  # new code not used
-        s = soup.findAll('a', attrs={'href': re.compile(search_string)})
-        # s = soup.find_all('a', href=re.compile(r'^/\?p=section&a=details&id=\d+$'))  # new code not used
-        return s, r
+    # @staticmethod
+    # def get_waiting():
+    #     # new_hacks = 'https://www.smwcentral.net/?p=section&s=smwhacks&u=1'  # old code
+    #     new_hacks = 'https://www.smwcentral.net/?p=section&s=smwhacks&u=1&locale=en-US'
+    #     r = requests.get(new_hacks, timeout=30)
+    #     c.incr('tasks.get_waiting.status_codes.{}'.format(r.status_code))
+    #     soup = BeautifulSoup(r.content.decode(r.encoding), 'html.parser')
+    #     search_string = '/\?p=section&a=details&id='
+    #     # search_string = r'^/\?p=section&a=details&id=\d+$'  # new code not used
+    #     s = soup.findAll('a', attrs={'href': re.compile(search_string)})
+    #     # s = soup.find_all('a', href=re.compile(r'^/\?p=section&a=details&id=\d+$'))  # new code not used
+    #     return s, r
 
-    @staticmethod
-    def verify_hack(h, smwc_id):
-        if not smwc_id.isdigit():
-            logger.debug('New hack has non-numeric ID: %s', smwc_id)
-            return False
-        smwc_id = int(smwc_id)
-        if smwc_id < settings.APP_MIN_HACK_ID:
-            logger.debug('New hack below min ID: %s', smwc_id)
-            return False
-        try:
-            if h.parent.has_attr('class'):
-                if h.parent.attrs['class'][0] == 'rope':
-                    logger.debug('New hack parent has class rope: %s', smwc_id)
-                    return False
-            if h.previous_sibling.startswith('Tip') or h.text == 'Floating IPS':
-                logger.debug('New hack detected in as tip: %s', smwc_id)
-                return False
-            return smwc_id
+    # @staticmethod
+    # def verify_hack(h, smwc_id):
+    #     if not smwc_id.isdigit():
+    #         logger.debug('New hack has non-numeric ID: %s', smwc_id)
+    #         return False
+    #     smwc_id = int(smwc_id)
+    #     if smwc_id < settings.APP_MIN_HACK_ID:
+    #         logger.debug('New hack below min ID: %s', smwc_id)
+    #         return False
+    #     try:
+    #         if h.parent.has_attr('class'):
+    #             if h.parent.attrs['class'][0] == 'rope':
+    #                 logger.debug('New hack parent has class rope: %s', smwc_id)
+    #                 return False
+    #         if h.previous_sibling.startswith('Tip') or h.text == 'Floating IPS':
+    #             logger.debug('New hack detected in as tip: %s', smwc_id)
+    #             return False
+    #         return smwc_id
+    #
+    #     except Exception as error:
+    #         logger.debug(error)
+    #         return False
 
-        except Exception as error:
-            logger.debug(error)
-            return False
-
-    @staticmethod
-    def update_hack_info(hack):
-        try:
-            logger.debug('rom_url: %s', hack.get_hack_url())
-            r = requests.get(hack.get_hack_url(), verify=False, timeout=30)
-            c.incr('tasks.update_hack_info.status_codes.{}'.format(r.status_code))
-            if not r.ok:
-                logger.error('Error retrieving smwc webpage: %s', r.status_code)
-                r.raise_for_status()
-            soup = BeautifulSoup(r.text, 'html.parser')
-            details_table = soup.find('table', class_='list')
-            details_rows = details_table.find_all('tr')
-            data = {}
-            for row in details_rows:
-                field = row.find('td', class_='field')
-                value = row.find('td', class_='name') or row.find('td', class_=None)
-                if field and value:
-                    data[field.text.strip(':')] = value.text.strip()
-            req = ['Name', 'Author', 'Submitted', 'Demo', 'Featured', 'Length',
-                   'Type', 'Description', 'Tags', 'Comments', 'Rating']
-            for x in req:
-                if x not in data:
-                    data[x] = None
-            download_section = soup.find('div', class_='download-section')
-            # hack.download_url = 'https:' + download_section.find('a', class_='button action')['href']  # old code
-            hack.download_url = download_section.find('a', class_='button action')['href']
-            hack.difficulty = data.get('Type', 'Unknown')
-            hack.authors = data.get('Author', 'Unknown')
-            hack.length = data.get('Length', 'Unknown')
-            hack.description = data.get('Description', 'Unknown')
-            hack.demo = True if data.get('Demo') == 'Yes' else False
-            hack.featured = True if data.get('Featured') == 'Yes' else False
-        except Exception as error:
-            logger.exception(error)
+    # @staticmethod
+    # def update_hack_info(hack):
+    #     try:
+    #         logger.debug('rom_url: %s', hack.get_hack_url())
+    #         r = requests.get(hack.get_hack_url(), verify=False, timeout=30)
+    #         c.incr('tasks.update_hack_info.status_codes.{}'.format(r.status_code))
+    #         if not r.ok:
+    #             logger.error('Error retrieving smwc webpage: %s', r.status_code)
+    #             r.raise_for_status()
+    #         soup = BeautifulSoup(r.text, 'html.parser')
+    #         details_table = soup.find('table', class_='list')
+    #         details_rows = details_table.find_all('tr')
+    #         data = {}
+    #         for row in details_rows:
+    #             field = row.find('td', class_='field')
+    #             value = row.find('td', class_='name') or row.find('td', class_=None)
+    #             if field and value:
+    #                 data[field.text.strip(':')] = value.text.strip()
+    #         req = ['Name', 'Author', 'Submitted', 'Demo', 'Featured', 'Length',
+    #                'Type', 'Description', 'Tags', 'Comments', 'Rating']
+    #         for x in req:
+    #             if x not in data:
+    #                 data[x] = None
+    #         download_section = soup.find('div', class_='download-section')
+    #         # hack.download_url = 'https:' + download_section.find('a', class_='button action')['href']  # old code
+    #         hack.download_url = download_section.find('a', class_='button action')['href']
+    #         hack.difficulty = data.get('Type', 'Unknown')
+    #         hack.authors = data.get('Author', 'Unknown')
+    #         hack.length = data.get('Length', 'Unknown')
+    #         hack.description = data.get('Description', 'Unknown')
+    #         hack.demo = True if data.get('Demo') == 'Yes' else False
+    #         hack.featured = True if data.get('Featured') == 'Yes' else False
+    #     except Exception as error:
+    #         logger.exception(error)
 
     @staticmethod
     def download_rom(hack):
