@@ -63,7 +63,7 @@ jobs:
       packages: write
 
     environment:
-      name: ${{ env.env-name }}
+      name: ${{ inputs.env || 'dev' }}
       url: ${{ env.url }}
 
     steps:
