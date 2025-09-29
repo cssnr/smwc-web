@@ -2,6 +2,7 @@ import datetime
 import ftplib
 import logging
 import os
+import time
 import requests
 import statsd
 import tarfile
@@ -16,7 +17,7 @@ from django.utils.text import slugify
 from celery import shared_task
 from home.models import Hacks, Webhooks
 
-logger = logging.getLogger('app')
+logger = logging.getLogger('celery')
 c = statsd.StatsClient(settings.STATSD_HOST, settings.STATSD_PORT, settings.STATSD_PREFIX)
 urllib3.disable_warnings()
 
@@ -24,16 +25,29 @@ urllib3.disable_warnings()
 @shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 1, 'countdown': 240})
 def process_hacks():
     logger.debug('process_hacks: executed')
+    if settings.DEBUG:
+        logger.debug('debug enabled - delaying 10 seconds...')
+        time.sleep(10)
     # waiting, r = SmwCentral.get_waiting()
     new_hacks = 'https://www.smwcentral.net/ajax.php?a=getsectionlist&s=smwhacks&u=1'
     r = requests.get(new_hacks, timeout=30)
-    logger.info('r.status_code: %s', r.status_code)
+    logger.info('response code: %s - %s', r.status_code, r.url)
+    logger.debug(
+        'Rate Limit: %s - Remaining: %s',
+        r.headers.get('X-RateLimit-Limit'),
+        r.headers.get('X-RateLimit-Remaining')
+    )
+    if r.status_code == 429:
+        logger.warning('429 Rate Limit for url: %s', r.url)
+    if not r.ok:
+        logger.error("Error Checking New Hacks: %s - %s", r.status_code, r.reason)
+        r.raise_for_status()
     data = r.json()
     # logger.debug('data: %s', data)
     waiting = data.get('data')
     if not waiting:
-        logger.debug('No waiting hacks.')
-        return 'No waiting hacks.'
+        logger.info('No waiting hacks for data: %s', data)
+        return 'Version 2 - No waiting hacks'
 
     logger.debug('Total Waiting Hacks: %s', len(waiting))
     errors = 0
