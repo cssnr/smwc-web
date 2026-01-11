@@ -23,7 +23,6 @@ on:
         options:
           - dev
           - prod
-
   push:
     branches-ignore:
       - master
@@ -43,7 +42,7 @@ env:
   build: ${{ github.event_name == 'push' && true || inputs.build }}
   deploy: ${{ github.event_name == 'push' && true || inputs.deploy }}
   cleanup: ${{ github.event_name == 'push' && true || inputs.cleanup }}
-  url: ${{ inputs.env == 'prod' && 'https://smwc.world/' || 'https://dev.smwc.world/' }}
+  url: ${{ inputs.env == 'prod' && 'https://smwcworld.com/' || 'https://dev.smwcworld.com/' }}
 
 concurrency:
   group: ${{ inputs.env || 'dev' }}

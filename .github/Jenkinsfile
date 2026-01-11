@@ -52,7 +52,7 @@ pipeline {
                 ENV_NAME = "dev"
                 ENV_FILE = "service-configs/services/${SERVICE_NAME}/${ENV_NAME}.env"
                 STACK_NAME = "${ENV_NAME}_${BASE_NAME}"
-                TRAEFIK_HOST = "`dev.smwc.world`, `roms-dev.smwc.world`"
+                TRAEFIK_HOST = "`dev.smwcworld.com`, `roms-dev.smwcworld.com`"
             }
             steps {
                 echo "\n--- Starting ${ENV_NAME} Deploy ---\n" +
@@ -77,7 +77,7 @@ pipeline {
                 ENV_NAME = "prod"
                 ENV_FILE = "service-configs/services/${SERVICE_NAME}/${ENV_NAME}.env"
                 STACK_NAME = "${ENV_NAME}_${BASE_NAME}"
-                TRAEFIK_HOST = "`smwc.world`, `roms.smwc.world`"
+                TRAEFIK_HOST = "`smwcworld.com`, `roms.smwcworld.com`"
             }
             steps {
                 echo "\n--- Starting ${ENV_NAME} Deploy ---\n" +

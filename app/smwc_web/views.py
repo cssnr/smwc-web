@@ -1,8 +1,10 @@
 import logging
+
 from django.http import HttpResponse
 
-logger = logging.getLogger('app')
+
+logger = logging.getLogger("app")
 
 
 def health_check(request):
-    return HttpResponse('success', status=200)
+    return HttpResponse("success", status=200)
