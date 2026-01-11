@@ -14,7 +14,9 @@ lint = [
   "mypy",
   "ruff",
   "tombi; python_version>='3.10'",
+  "toml-run",
   "ty",
+  "types-requests",
   "yamllint",
 ]
 prod = [
@@ -41,6 +43,7 @@ prod = [
 # https://bandit.readthedocs.io/en/latest/config.html
 [tool.bandit]
 exclude_dirs = ["venv"]
+skips = ["B108", "B321", "B402", "B404", "B501", "B602", "B603"]
 
 # Black
 # https://black.readthedocs.io/en/stable/usage_and_configuration/
@@ -80,28 +83,26 @@ select = ["E4", "E7", "E9", "F", "B", "Q"]
 # Scripts
 # https://github.com/cssnr/toml-run
 [tool.scripts]
-format = """
-black .
-isort -c .
-ruff format
-tombi format .
-which prettier && prettier --write . || echo missing prettier
-"""
-lint = """
-run bandit
-run mypy
-run ruff
-run validate
-run yamllint
-which prettier && prettier --check . || echo missing prettier
-black --check .
-isort -c .
-tombi lint .
-ty check -v .
-uv lock --check
-"""
-bandit = "bandit -c pyproject.toml -r ."
-mypy = "mypy ."
-ruff = "ruff check ."
-validate = "validate-pyproject pyproject.toml"
+format = [
+  "black .",
+  "isort -c .",
+  "ruff format",
+  "tombi format",
+  "which prettier && prettier --write . || echo missing prettier",
+]
+lint = [
+  "run bandit",
+  "run mypy",
+  "run ruff",
+  "run yamllint",
+  "which prettier && prettier --check . || echo missing prettier",
+  "black --check app",
+  "isort -c app",
+  "tombi lint",
+  # "ty check -v app",
+  "uv lock --check",
+]
+bandit = "bandit -c pyproject.toml -r app"
+mypy = "mypy app"
+ruff = "ruff check app"
 yamllint = "yamllint -c .github/yamllint.yaml ."

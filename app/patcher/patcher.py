@@ -113,7 +113,7 @@ class RomPatcher(object):
 
     @staticmethod
     def find_first_file(directory, pattern):
-        for root, subdirs, files in os.walk(directory):
+        for root, _, files in os.walk(directory):
             for f in files:
                 if re.search(pattern, f):
                     return os.path.join(root, f)
