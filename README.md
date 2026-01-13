@@ -1,9 +1,9 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/924fb85c7d2c4b67805aeb2cfd47fea4)](https://app.codacy.com/gh/cssnr/smwc-web/dashboard)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=cssnr_smwc-web&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=cssnr_smwc-web)
-[![Deployments Prod](https://img.shields.io/github/deployments/cssnr/smwc-web/prod?logo=portainer&logoColor=white&label=prod)](https://smwc.world/)
-[![Deployments Dev](https://img.shields.io/github/deployments/cssnr/smwc-web/dev?logo=portainer&logoColor=white&label=dev)](https://dev.smwc.world/)
-[![Workflow CI](https://img.shields.io/github/actions/workflow/status/cssnr/smwc-web/ci.yaml?logo=cachet&label=ci)](https://github.com/cssnr/smwc-web/actions/workflows/ci.yaml)
-[![Workflow Lint](https://img.shields.io/github/actions/workflow/status/cssnr/smwc-web/lint.yaml?logo=cachet&label=lint)](https://github.com/cssnr/smwc-web/actions/workflows/lint.yaml)
+[![Deployments Prod](https://img.shields.io/github/deployments/cssnr/smwc-web/prod?logo=portainer&logoColor=white&label=prod)](https://smwcworld.com/)
+[![Deployments Dev](https://img.shields.io/github/deployments/cssnr/smwc-web/dev?logo=portainer&logoColor=white&label=dev)](https://dev.smwcworld.com/)
+[![Workflow CI](https://img.shields.io/github/actions/workflow/status/cssnr/smwc-web/ci.yaml?logo=verizon&label=ci)](https://github.com/cssnr/smwc-web/actions/workflows/ci.yaml)
+[![Workflow Lint](https://img.shields.io/github/actions/workflow/status/cssnr/smwc-web/lint.yaml?logo=verizon&label=lint)](https://github.com/cssnr/smwc-web/actions/workflows/lint.yaml)
 [![GitHub Last Commit](https://img.shields.io/github/last-commit/cssnr/smwc-web?logo=github&label=updated)](https://github.com/cssnr/smwc-web/pulse)
 [![GitHub Contributors](https://img.shields.io/github/contributors-anon/cssnr/smwc-web?logo=github)](https://github.com/cssnr/smwc-web/graphs/contributors)
 [![GitHub Repo Size](https://img.shields.io/github/repo-size/cssnr/smwc-web?logo=bookstack&logoColor=white&label=repo%20size)](https://github.com/cssnr/smwc-web?tab=readme-ov-file#readme)
@@ -15,7 +15,7 @@
 [![Discord](https://img.shields.io/discord/536290056571453450?logo=discord&logoColor=white&label=smwc&color=7289da)](https://discord.gg/6pzXJE5)
 [![Discord](https://img.shields.io/discord/899171661457293343?logo=discord&logoColor=white&label=cssnr&color=7289da)](https://discord.gg/wXy6m2X8wY)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-72a5f2?logo=kofi&label=support)](https://ko-fi.com/cssnr)
-[![](https://repository-images.githubusercontent.com/443952841/5d9d45ca-7bf2-4773-969e-302f2ecd6903)](https://smwc.world/)
+[![](https://repository-images.githubusercontent.com/443952841/5d9d45ca-7bf2-4773-969e-302f2ecd6903)](https://smwcworld.com/)
 
 # SMW Central ROM Archive
 

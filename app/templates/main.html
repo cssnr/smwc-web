@@ -107,10 +107,9 @@
         <hr>
         <div class="row">
             <div class="col">
-                <p><a href="{% get_config 'APP_STATUS_URL' %}">
-                    SMWC Status</a> |
-                    Report Abuse:
-                    <script type="text/javascript" src="{% static 'email/abuse.js' %}"></script>
+                <p>
+                    <a href="{% get_config 'APP_STATUS_URL' %}">SMWC Status</a> |
+                    Report Abuse: <a data-email="abuse"></a>
                 </p>
             </div>
         </div>
@@ -128,6 +127,7 @@
 <script type="text/javascript" src="{% static 'popper/popper.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'main/js/main.js' %}"></script>
+<script type="text/javascript" src="{% static 'email/render.js' %}"></script>
 
 {% block tail %}{% endblock %}
 

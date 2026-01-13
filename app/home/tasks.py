@@ -2,46 +2,60 @@ import datetime
 import ftplib
 import logging
 import os
-import requests
-import statsd
 import tarfile
 import tempfile
-# noinspection PyPackageRequirements
-import urllib3
+import time
 from urllib import parse
+
+import requests
+import statsd
+import urllib3
+from celery import shared_task
 from django.conf import settings
 from django.core.cache import cache
 from django.core.cache.utils import make_template_fragment_key
 from django.utils.text import slugify
-from celery import shared_task
+
 from home.models import Hacks, Webhooks
 
-logger = logging.getLogger('app')
+
+logger = logging.getLogger("app")
 c = statsd.StatsClient(settings.STATSD_HOST, settings.STATSD_PORT, settings.STATSD_PREFIX)
 urllib3.disable_warnings()
 
 
-@shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 1, 'countdown': 240})
+@shared_task(autoretry_for=(Exception,), retry_kwargs={"max_retries": 1, "countdown": 240})
 def process_hacks():
-    logger.debug('process_hacks: executed')
+    logger.debug("process_hacks: executed")
+    if settings.DEBUG:
+        logger.debug("debug enabled - delaying 10 seconds...")
+        time.sleep(10)
     # waiting, r = SmwCentral.get_waiting()
-    new_hacks = 'https://www.smwcentral.net/ajax.php?a=getsectionlist&s=smwhacks&u=1'
+    new_hacks = "https://www.smwcentral.net/ajax.php?a=getsectionlist&s=smwhacks&u=1"
     r = requests.get(new_hacks, timeout=30)
-    logger.info('r.status_code: %s', r.status_code)
+    logger.info("response code: %s - %s", r.status_code, r.url)
+    logger.debug(
+        "Rate Limit: %s - Remaining: %s", r.headers.get("X-RateLimit-Limit"), r.headers.get("X-RateLimit-Remaining")
+    )
+    if r.status_code == 429:
+        logger.warning("429 Rate Limit for url: %s", r.url)
+    if not r.ok:
+        logger.error("Error Checking New Hacks: %s - %s", r.status_code, r.reason)
+        r.raise_for_status()
     data = r.json()
     # logger.debug('data: %s', data)
-    waiting = data.get('data')
+    waiting = data.get("data")
     if not waiting:
-        logger.debug('No waiting hacks.')
-        return 'No waiting hacks.'
+        logger.info("No waiting hacks for data: %s", data)
+        return "Version 2 - No waiting hacks"
 
-    logger.debug('Total Waiting Hacks: %s', len(waiting))
+    logger.debug("Total Waiting Hacks: %s", len(waiting))
     errors = 0
     for i, h in enumerate(waiting):
-        smwc_id = h.get('id')
-        logger.debug('Processing hack %s/%s - %s', i, len(waiting), smwc_id)
+        smwc_id = h.get("id")
+        logger.debug("Processing hack %s/%s - %s", i, len(waiting), smwc_id)
         if not smwc_id:
-            logger.warning('No ID for Hack: %s', h)
+            logger.warning("No ID for Hack: %s", h)
             continue
 
         try:
@@ -59,180 +73,180 @@ def process_hacks():
             hack, created = Hacks.objects.get_or_create(smwc_id=smwc_id)
             # logger.debug('created: %s', created)
             if not created:
-                logger.debug('not created hack.smwc_id: %s', hack.smwc_id)
+                logger.debug("not created hack.smwc_id: %s", hack.smwc_id)
                 continue
 
-            logger.debug('tasks.process_hacks.created')
-            c.incr('tasks.process_hacks.created')
-            hack.name = h['name']
-            hack.smwc_href = '/?p=section&a=details&id=' + str(hack.smwc_id)
+            logger.debug("tasks.process_hacks.created")
+            c.incr("tasks.process_hacks.created")
+            hack.name = h["name"]
+            hack.smwc_href = "/?p=section&a=details&id=" + str(hack.smwc_id)
             # SmwCentral.update_hack_info(hack)
-            hack.download_url = h['download_url']
-            hack.difficulty = h['fields']['type']
+            hack.download_url = h["download_url"]
+            hack.difficulty = h["fields"]["type"]
             hack.authors = ", ".join(x["name"] for x in h["authors"])
-            hack.length = h['fields']['length']
-            hack.description = h['raw_fields']['description']
-            hack.demo = h['raw_fields']['demo']
-            hack.featured = h['raw_fields']['hof']
+            hack.length = h["fields"]["length"]
+            hack.description = h["raw_fields"]["description"]
+            hack.demo = h["raw_fields"]["demo"]
+            hack.featured = h["raw_fields"]["hof"]
 
             SmwCentral.download_rom(hack)
             hack.save()
             process_alert.delay(hack.pk)
-            logger.debug('deleting cache key for template fragment: roms_body')
-            key = make_template_fragment_key('roms_body')
+            logger.debug("deleting cache key for template fragment: roms_body")
+            key = make_template_fragment_key("roms_body")
             cache.delete(key)
-            logger.info('New Hack: %s | %s | %s', hack.smwc_id, hack.name, hack.get_hack_url())
+            logger.info("New Hack: %s | %s | %s", hack.smwc_id, hack.name, hack.get_hack_url())
 
         except Exception as error:
-            c.incr('tasks.process_hacks.errors')
+            c.incr("tasks.process_hacks.errors")
             errors += 1
             logger.exception(error)
             continue
 
-    return 'Processed {} hacks with {} errors.'.format(len(waiting), errors)
+    return "Processed {} hacks with {} errors.".format(len(waiting), errors)
 
 
-@shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 60}, rate_limit='10/m')
+@shared_task(autoretry_for=(Exception,), retry_kwargs={"max_retries": 5, "countdown": 60}, rate_limit="10/m")
 def process_alert(hack_pk):
     hack = Hacks.objects.get(pk=hack_pk)
     message = gen_discord_message(hack)
     logger.debug(message)
     hooks = Webhooks.objects.all()
     if not hooks:
-        logger.debug('No hooks found, nothing to do.')
+        logger.debug("No hooks found, nothing to do.")
         return
 
     for hook in hooks:
         if not hook.active:
             continue
-        logger.debug('Sending alert to: %s', hook.owner_username)
+        logger.debug("Sending alert to: %s", hook.owner_username)
         send_alert.delay(hook.id, message)
 
 
-@shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 60})
+@shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={"max_retries": 5, "countdown": 60})
 def send_alert(self, hook_pk, message):
     try:
         hook = Webhooks.objects.get(pk=hook_pk)
-        body = {'content': message}
+        body = {"content": message}
         r = requests.post(hook.webhook_url, json=body, timeout=30)
-        c.incr('tasks.send_alert.status_codes.{}'.format(r.status_code))
+        c.incr("tasks.send_alert.status_codes.{}".format(r.status_code))
         if r.status_code == 404:
-            logger.info('Hook %s removed by owner %s - %s',
-                           hook.hook_id, hook.owner_username, hook.webhook_url)
+            logger.info("Hook %s removed by owner %s - %s", hook.hook_id, hook.owner_username, hook.webhook_url)
             hook.delete()
-            c.incr('tasks.send_alert.hook_delete')
-            return '404: Hook removed by owner and deleted from database.'
+            c.incr("tasks.send_alert.hook_delete")
+            return "404: Hook removed by owner and deleted from database."
 
         if r.status_code == 429:
             try:
                 data = r.json()
-                retry_after = data.get('retry_after', 61)
+                retry_after = data.get("retry_after", 61)
             except ValueError:
                 retry_after = 62
-            logger.info('429: Discord Rate Limited - retry_after: %s', retry_after)
-            raise self.retry(exc=Exception('429 Too Many Requests'), countdown=retry_after)
+            logger.info("429: Discord Rate Limited - retry_after: %s", retry_after)
+            raise self.retry(exc=Exception("429 Too Many Requests"), countdown=retry_after)
 
         if not r.ok:
             logger.warning(r.content.decode(r.encoding))
             r.raise_for_status()
 
-        return '{}: {}'.format(r.status_code, r.content.decode(r.encoding))
+        return "{}: {}".format(r.status_code, r.content.decode(r.encoding))
 
     except Exception as error:
-        c.incr('tasks.send_alert.errors')
+        c.incr("tasks.send_alert.errors")
         logger.exception(error)
         raise
 
 
-@shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 60})
+@shared_task(autoretry_for=(Exception,), retry_kwargs={"max_retries": 5, "countdown": 60})
 def send_discord_message(url, message):
     try:
-        body = {'content': message}
+        body = {"content": message}
         r = requests.post(url, json=body, timeout=30)
-        c.incr('tasks.send_discord_message.status_codes.{}'.format(r.status_code))
+        c.incr("tasks.send_discord_message.status_codes.{}".format(r.status_code))
         if not r.ok:
             logger.warning(r.content.decode(r.encoding))
             r.raise_for_status()
-        return '{}: {}'.format(r.status_code, r.content.decode(r.encoding))
+        return "{}: {}".format(r.status_code, r.content.decode(r.encoding))
 
     except Exception as error:
-        c.incr('tasks.send_discord_message.errors.')
+        c.incr("tasks.send_discord_message.errors.")
         logger.exception(error)
         raise
 
 
-@shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 3600})
+@shared_task(autoretry_for=(Exception,), retry_kwargs={"max_retries": 3, "countdown": 3600})
 def backup_hacks():
-    logger.debug('backup_hacks: executed')
-    tf = tempfile.NamedTemporaryFile(dir='/tmp')
-    df = tempfile.NamedTemporaryFile(dir='/tmp')
-    logger.debug('tf.name: %s', tf.name)
+    logger.debug("backup_hacks: executed")
+    tf = tempfile.NamedTemporaryFile(dir="/tmp")
+    df = tempfile.NamedTemporaryFile(dir="/tmp")
+    logger.debug("tf.name: %s", tf.name)
     try:
         ts = int(datetime.datetime.now().timestamp())
-        logger.debug('ts: %s', ts)
+        logger.debug("ts: %s", ts)
         mysql_dump(df.name)
-        tar = tarfile.open(tf.name, 'w:gz')
-        tar.add(settings.APP_ROMS_DIR, arcname=f'roms-{ts}')
+        tar = tarfile.open(tf.name, "w:gz")
+        tar.add(settings.APP_ROMS_DIR, arcname=f"roms-{ts}")
         tar.add(df.name, arcname=f"{settings.DATABASES['default']['NAME']}-{ts}.sql")
         tar.close()
-        ftp_upload_file(tf.name, settings.FTP_DIR, f'roms-{ts}.tar.gz')
+        ftp_upload_file(tf.name, settings.FTP_DIR, f"roms-{ts}.tar.gz")
         ftp_cleanup.delay()
     finally:
-        logger.debug('backup_hacks: finally')
+        logger.debug("backup_hacks: finally")
         tf.close()
         df.close()
 
 
 # noinspection PyUnusedLocal
-@shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 3600})
-def ftp_cleanup(directory=None, keep_files=10, ls_pattern=None): # NOSONAR
-    logger.debug('ftp_cleanup: executed')
+@shared_task(autoretry_for=(Exception,), retry_kwargs={"max_retries": 3, "countdown": 3600})
+def ftp_cleanup(directory=None, keep_files=10, ls_pattern=None):  # NOSONAR
+    logger.debug("ftp_cleanup: executed")
 
     directory = settings.FTP_DIR
     keep_files = settings.FTP_KEEP_FILES
-    ls_pattern = 'roms-*.tar.gz'
+    ls_pattern = "roms-*.tar.gz"
 
-    logger.debug('directory: %s', directory)
-    logger.debug('keep_files: %s', keep_files)
-    logger.debug('ls_pattern: %s', ls_pattern)
+    logger.debug("directory: %s", directory)
+    logger.debug("keep_files: %s", keep_files)
+    logger.debug("ls_pattern: %s", ls_pattern)
 
     ftp = ftplib.FTP(host=settings.FTP_HOST, user=settings.FTP_USER, passwd=settings.FTP_PASS)
     try:
-        rdir = directory.rstrip('/') + '/' + ls_pattern.lstrip('/') if ls_pattern else directory
-        logger.debug('rdir: %s', rdir)
+        rdir = directory.rstrip("/") + "/" + ls_pattern.lstrip("/") if ls_pattern else directory
+        logger.debug("rdir: %s", rdir)
         dl = ftp.nlst(rdir)
-        logger.debug('dl: %s', dl)
+        logger.debug("dl: %s", dl)
         dl.sort(reverse=True)
         keeping = []
         if len(dl) <= int(keep_files):
-            logger.debug('Found %s files but keeping %s.', len(dl), keep_files)
+            logger.debug("Found %s files but keeping %s.", len(dl), keep_files)
             return
 
         for _ in range(int(keep_files)):
             keeping.append(dl.pop(0))
         for file in dl:
-            logger.debug('Deleting file: %s', file)
+            logger.debug("Deleting file: %s", file)
             ftp.delete(file)
-        logger.debug('keeping: %s', keeping)
+        logger.debug("keeping: %s", keeping)
     finally:
-        logger.debug('ftp_cleanup: finally')
+        logger.debug("ftp_cleanup: finally")
         ftp.quit()
 
 
 def mysql_dump(output_file_path):
     import subprocess
+
     command = 'mysqldump -h {} -u {} -p"{}" {} > {}'.format(
-        settings.DATABASES['default']['HOST'],
-        settings.DATABASES['default']['USER'],
-        settings.DATABASES['default']['PASSWORD'],
-        settings.DATABASES['default']['NAME'],
+        settings.DATABASES["default"]["HOST"],
+        settings.DATABASES["default"]["USER"],
+        settings.DATABASES["default"]["PASSWORD"],
+        settings.DATABASES["default"]["NAME"],
         output_file_path,
     )
     result = subprocess.check_call(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     logger.debug(result)
     if result != 0:
         logger.error(result)
-        raise Exception('mysqldump error')  # NOSONAR
+        raise Exception("mysqldump error")  # NOSONAR
     return result
 
 
@@ -242,54 +256,54 @@ def ftp_upload_file(filepath, directory, remote_filename=None):
     try:
         dl = ftp.nlst(directory)
         if (remote_filename or os.path.basename(filepath)) in dl:
-            raise Exception(f'Remote file already exists: {r_file}')  # NOSONAR
-        with open(filepath, 'rb') as file:
-            ftp.storbinary(f'STOR {r_file}', file)
+            raise Exception(f"Remote file already exists: {r_file}")  # NOSONAR
+        with open(filepath, "rb") as file:
+            ftp.storbinary(f"STOR {r_file}", file)
     finally:
         ftp.quit()
 
 
 def get_short_url(long_url, title=None, tags=None, domain=None):
-    url = 'https://api-ssl.bitly.com/v4/bitlinks'
+    url = "https://api-ssl.bitly.com/v4/bitlinks"
     headers = {
-        'Authorization': 'Bearer {}'.format(settings.BITLY_ACCESS_TOKEN),
-        'Content-Type': 'application/json',
+        "Authorization": "Bearer {}".format(settings.BITLY_ACCESS_TOKEN),
+        "Content-Type": "application/json",
     }
-    data = {'long_url': long_url}
+    data = {"long_url": long_url}
     if title:
-        data['title'] = title
+        data["title"] = title
     if title:
-        data['tags'] = tags
+        data["tags"] = tags
     if title:
-        data['domain'] = domain
+        data["domain"] = domain
     r = requests.post(url, json=data, headers=headers, timeout=15)
     if not r.ok:
         return None
-    return r.json()['link']
+    return r.json()["link"]
 
 
 def gen_discord_message(hack):
-    message = 'New Hack: **{}**\nSMWC URL: {}'.format(hack.name, hack.get_hack_url())
+    message = "New Hack: **{}**\nSMWC URL: {}".format(hack.name, hack.get_hack_url())
     if hack.get_archive_url():
-        message += '\nArchive URL: {}'.format(hack.get_archive_url())
+        message += "\nArchive URL: {}".format(hack.get_archive_url())
     if hack.get_patcher_url():
         short_url = get_short_url(hack.get_patcher_url())
         if short_url:
-            logger.debug('short_url: %s', short_url)
-            message += '\nPatcher URL: <{}>'.format(short_url)
+            logger.debug("short_url: %s", short_url)
+            message += "\nPatcher URL: <{}>".format(short_url)
     if hack.difficulty:
-        message += '\nDifficulty: **{}**'.format(hack.difficulty)
+        message += "\nDifficulty: **{}**".format(hack.difficulty)
     if hack.length:
-        message += '\nLength: **{}**'.format(hack.length)
+        message += "\nLength: **{}**".format(hack.length)
     if hack.authors:
-        message += '\nAuthors: **{}**'.format(hack.authors)
+        message += "\nAuthors: **{}**".format(hack.authors)
     if hack.demo:
-        message += '\n**This hack is a DEMO**'
+        message += "\n**This hack is a DEMO**"
     if hack.featured:
-        message += '\n**This hack is a FEATURED**'
+        message += "\n**This hack is a FEATURED**"
     if hack.description:
         max_desc = 1800 - len(message)
-        message += '\n```\n{}\n```'.format(hack.description[:max_desc])
+        message += "\n```\n{}\n```".format(hack.description[:max_desc])
     return message
 
 
@@ -368,35 +382,35 @@ class SmwCentral(object):
     @staticmethod
     def download_rom(hack):
         if not hack.download_url:
-            logger.error('Hack PK %s has no download_url', hack.pk)
+            logger.error("Hack PK %s has no download_url", hack.pk)
             return
 
-        logger.info('Download URL: %s', hack.download_url)
+        logger.info("Download URL: %s", hack.download_url)
         r = requests.get(hack.download_url, verify=False, timeout=30)  # NOSONAR
-        c.incr('tasks.download_rom.status_codes.{}'.format(r.status_code))
+        c.incr("tasks.download_rom.status_codes.{}".format(r.status_code))
         if not r.ok:
-            logger.error('Error retrieving rom download archive: %s', r.status_code)
+            logger.error("Error retrieving rom download archive: %s", r.status_code)
             logger.error(r.content)
             r.raise_for_status()
 
         parsed = parse.unquote(os.path.basename(parse.urlparse(hack.download_url).path))
-        logger.debug('parsed: %s', parsed)
+        logger.debug("parsed: %s", parsed)
         name, extension = os.path.splitext(parsed)
-        logger.debug('name: %s', name)
-        logger.debug('extension: %s', extension)
+        logger.debug("name: %s", name)
+        logger.debug("extension: %s", extension)
         slug = slugify(hack.name) if hack.name else slugify(name)
-        file_name = '{}-{}{}'.format(slug, hack.smwc_id, extension)
-        logger.debug('file_name: %s', file_name)
-        year_month = datetime.datetime.now().strftime('%Y/%B')
+        file_name = "{}-{}{}".format(slug, hack.smwc_id, extension)
+        logger.debug("file_name: %s", file_name)
+        year_month = datetime.datetime.now().strftime("%Y/%B")
         file_dir = os.path.join(settings.APP_ROMS_DIR, year_month)
-        logger.debug('file_dir: %s', file_dir)
+        logger.debug("file_dir: %s", file_dir)
         file_uri = os.path.join(year_month, file_name)
-        logger.debug('file_uri: %s', file_uri)
+        logger.debug("file_uri: %s", file_uri)
         hack.file_uri = file_uri
         if not os.path.exists(file_dir):
             os.makedirs(file_dir)
         file_path = os.path.join(file_dir, file_name)
-        logger.debug('file_path: %s', file_path)
-        with open(file_path, 'wb') as f:
+        logger.debug("file_path: %s", file_path)
+        with open(file_path, "wb") as f:
             f.write(r.content)
             f.close()

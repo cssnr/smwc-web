@@ -1,4 +1,5 @@
 from urllib.parse import quote_plus
+
 from django.conf import settings
 from django.db import models
 
@@ -13,11 +14,11 @@ class Webhooks(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return '{}: {}'.format(self.owner_username, self.hook_id)
+        return "{}: {}".format(self.owner_username, self.hook_id)
 
     class Meta:
-        verbose_name = 'Webhooks'
-        verbose_name_plural = 'Webhooks'
+        verbose_name = "Webhooks"
+        verbose_name_plural = "Webhooks"
 
 
 class Hacks(models.Model):
@@ -35,15 +36,15 @@ class Hacks(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return '{}: {}'.format(self.name, self.smwc_id)
+        return "{}: {}".format(self.name, self.smwc_id)
 
     class Meta:
-        verbose_name = 'Hacks'
-        verbose_name_plural = 'Hacks'
+        verbose_name = "Hacks"
+        verbose_name_plural = "Hacks"
 
     def get_hack_url(self):
         if self.smwc_href:
-            if self.smwc_href.startswith('https'):
+            if self.smwc_href.startswith("https"):
                 return self.smwc_href
             else:
                 return settings.APP_SMWC_URL + self.smwc_href
@@ -52,13 +53,13 @@ class Hacks(models.Model):
 
     def get_archive_url(self):
         if self.file_uri:
-            return '{}/{}'.format(settings.APP_ROMS_URL, self.file_uri)
+            return "{}/{}".format(settings.APP_ROMS_URL, self.file_uri)
         else:
             return None
 
     def get_patcher_url(self):
         archive_url = self.get_archive_url()
         if archive_url:
-            return settings.APP_PATCHER_URL + '/?patch=' + quote_plus(archive_url)
+            return settings.APP_PATCHER_URL + "/?patch=" + quote_plus(archive_url)
         else:
             return None
