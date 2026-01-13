@@ -1,9 +1,6 @@
+# NOTE: dependency-groups are only used in dev...
 [dependency-groups]
 dev = [
-  "Werkzeug",
-  "django-debug-toolbar<6",
-  "django-extensions",
-  "watchdog",
   { include-group = "lint" },
   { include-group = "prod" },
 ]
@@ -100,7 +97,6 @@ lint = [
   "isort -c app",
   "tombi lint",
   # "ty check -v app",
-  "uv lock --check",
 ]
 bandit = "bandit -c pyproject.toml -r app"
 mypy = "mypy app"
