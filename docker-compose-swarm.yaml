@@ -12,7 +12,7 @@ services:
           memory: 50M
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.${STACK_NAME}.rule=Host(`${TRAEFIK_HOST}`)"
+        - "traefik.http.routers.${STACK_NAME}.rule=${TRAEFIK_HOST}"
         - "traefik.http.routers.${STACK_NAME}.entrypoints=https"
         - "traefik.http.routers.${STACK_NAME}.tls=true"
         - "traefik.http.services.${STACK_NAME}.loadbalancer.server.port=80"

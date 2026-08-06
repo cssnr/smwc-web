@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: "Debug event.json"
         continue-on-error: true
@@ -45,10 +45,10 @@ jobs:
         continue-on-error: true
         run: env
 
-      - name: "Setup Python 3.12"
-        uses: actions/setup-python@v6
+      - name: "Setup Python 3.11"
+        uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.11"
           cache: "pip"
 
       - name: "Install"
@@ -86,7 +86,7 @@ jobs:
 
       - name: "astral-sh/ruff"
         if: ${{ !cancelled() }}
-        uses: astral-sh/ruff-action@v3
+        uses: astral-sh/ruff-action@v4.1.0
         with:
           version: latest
 
@@ -143,7 +143,7 @@ jobs:
 
       - name: "hadolint"
         if: ${{ !cancelled() }}
-        uses: hadolint/hadolint-action@v3.3.0
+        uses: hadolint/hadolint-action@v3.4.0
         with:
           dockerfile: app/Dockerfile
           ignore: "DL3013,DL3018"
