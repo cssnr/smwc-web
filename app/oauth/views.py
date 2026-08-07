@@ -49,7 +49,7 @@ def callback(request):
         if oauth_state != request.session["state"]:
             logger.warning("STATE DOES NOT MATCH: {}".format(oauth_state))
         oauth_code = request.GET["code"]
-        logger.info("oauth_code: {}".format(oauth_code))
+        logger.info("oauth_code: %s", oauth_code)
         oauth_response = oauth_token(oauth_code)
         logger.info(pformat(oauth_response))
         discord_profile = get_discord(oauth_response["access_token"])
