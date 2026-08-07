@@ -15,7 +15,6 @@ from django.views.decorators.http import require_http_methods
 from home.models import Webhooks
 from home.tasks import send_discord_message
 
-
 logger = logging.getLogger("app")
 c = statsd.StatsClient(settings.STATSD_HOST, settings.STATSD_PORT, settings.STATSD_PREFIX)
 

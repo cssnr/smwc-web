@@ -4,7 +4,6 @@ from django.shortcuts import render
 
 from home.models import Hacks
 
-
 logger = logging.getLogger("app")
 
 

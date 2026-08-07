@@ -18,7 +18,6 @@ from django.utils.text import slugify
 
 from home.models import Hacks, Webhooks
 
-
 logger = logging.getLogger("app")
 c = statsd.StatsClient(settings.STATSD_HOST, settings.STATSD_PORT, settings.STATSD_PREFIX)
 urllib3.disable_warnings()
