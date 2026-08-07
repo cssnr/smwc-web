@@ -72,13 +72,16 @@ class RomPatcher(object):
                 r.raise_for_status()
             soup = BeautifulSoup(r.content.decode(r.encoding), "html.parser")
             download = soup.find(string="Download")
-            previous = download.findPrevious() if download is not None else None
-            if previous is None:
-                logger.debug("Unable to locate a ROM download at the provided url: %s", rom_url)
-                rom_url = None
+            if download:
+                previous = download.findPrevious()
             else:
+                previous = None
+            if previous:
                 rom_url = previous["href"]
                 logger.debug("rom_url: %s", rom_url)
+            else:
+                logger.debug("Unable to locate a ROM download at the provided url: %s", rom_url)
+                rom_url = None
             if not rom_url:
                 error = (
                     "Unable to locate a ROM download at the provided url. "
