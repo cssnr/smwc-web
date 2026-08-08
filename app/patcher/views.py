@@ -14,7 +14,6 @@ from patcher.forms import PatcherForm
 from patcher.patcher import RomPatcher
 from patcher.tasks import cleanup_hack
 
-
 logger = logging.getLogger("app")
 c = statsd.StatsClient(settings.STATSD_HOST, settings.STATSD_PORT, settings.STATSD_PREFIX)
 

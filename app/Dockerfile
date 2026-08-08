@@ -25,5 +25,5 @@ RUN addgroup -g 1000 app  &&\
 
 WORKDIR /app
 COPY --chown=app:app . .
-USER app
+USER 1000
 ENTRYPOINT ["sh", "docker-entrypoint.sh"]

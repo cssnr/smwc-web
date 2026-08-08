@@ -3,7 +3,6 @@ import shutil
 
 from celery import shared_task
 
-
 logger = logging.getLogger("celery")
 
 

@@ -15,7 +15,6 @@ from django.views.decorators.http import require_http_methods
 from home.models import Webhooks
 from home.tasks import send_discord_message
 
-
 logger = logging.getLogger("app")
 c = statsd.StatsClient(settings.STATSD_HOST, settings.STATSD_PORT, settings.STATSD_PREFIX)
 
@@ -50,7 +49,6 @@ def callback(request):
         if oauth_state != request.session["state"]:
             logger.warning("STATE DOES NOT MATCH: {}".format(oauth_state))
         oauth_code = request.GET["code"]
-        logger.info("oauth_code: {}".format(oauth_code))
         oauth_response = oauth_token(oauth_code)
         logger.info(pformat(oauth_response))
         discord_profile = get_discord(oauth_response["access_token"])

@@ -2,7 +2,6 @@ import logging
 
 from django.http import HttpResponse
 
-
 logger = logging.getLogger("app")
 
 

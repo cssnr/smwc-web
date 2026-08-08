@@ -10,7 +10,6 @@ from bs4 import BeautifulSoup
 from django.conf import settings
 from django.utils.text import slugify
 
-
 logger = logging.getLogger("app")
 
 
@@ -73,8 +72,16 @@ class RomPatcher(object):
                 r.raise_for_status()
             soup = BeautifulSoup(r.content.decode(r.encoding), "html.parser")
             download = soup.find(string="Download")
-            rom_url = download.findPrevious()["href"]
-            logger.debug("rom_url: %s", rom_url)
+            if download:
+                previous = download.findPrevious()
+            else:
+                previous = None
+            if previous:
+                rom_url = previous["href"]
+                logger.debug("rom_url: %s", rom_url)
+            else:
+                logger.debug("Unable to locate a ROM download at the provided url: %s", rom_url)
+                rom_url = None
             if not rom_url:
                 error = (
                     "Unable to locate a ROM download at the provided url. "
