@@ -13,6 +13,5 @@ python-decouple
 redis
 requests
 sentry-sdk
-statsd
 watchdog
 Werkzeug
