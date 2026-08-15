@@ -8,7 +8,6 @@ import time
 from urllib import parse
 
 import requests
-import statsd
 import urllib3
 from celery import shared_task
 from django.conf import settings
@@ -19,7 +18,7 @@ from django.utils.text import slugify
 from home.models import Hacks, Webhooks
 
 logger = logging.getLogger("app")
-c = statsd.StatsClient(settings.STATSD_HOST, settings.STATSD_PORT, settings.STATSD_PREFIX)
+# c = statsd.StatsClient(settings.STATSD_HOST, settings.STATSD_PORT, settings.STATSD_PREFIX)
 urllib3.disable_warnings()
 
 
@@ -76,7 +75,7 @@ def process_hacks():
                 continue
 
             logger.debug("tasks.process_hacks.created")
-            c.incr("tasks.process_hacks.created")
+            # c.incr("tasks.process_hacks.created")
             hack.name = h["name"]
             hack.smwc_href = "/?p=section&a=details&id=" + str(hack.smwc_id)
             # SmwCentral.update_hack_info(hack)
@@ -97,7 +96,7 @@ def process_hacks():
             logger.info("New Hack: %s | %s | %s", hack.smwc_id, hack.name, hack.get_hack_url())
 
         except Exception as error:
-            c.incr("tasks.process_hacks.errors")
+            # c.incr("tasks.process_hacks.errors")
             errors += 1
             logger.exception(error)
             continue
@@ -128,11 +127,11 @@ def send_alert(self, hook_pk, message):
         hook = Webhooks.objects.get(pk=hook_pk)
         body = {"content": message}
         r = requests.post(hook.webhook_url, json=body, timeout=30)
-        c.incr("tasks.send_alert.status_codes.{}".format(r.status_code))
+        # c.incr("tasks.send_alert.status_codes.{}".format(r.status_code))
         if r.status_code == 404:
             logger.info("Hook %s removed by owner %s - %s", hook.hook_id, hook.owner_username, hook.webhook_url)
             hook.delete()
-            c.incr("tasks.send_alert.hook_delete")
+            # c.incr("tasks.send_alert.hook_delete")
             return "404: Hook removed by owner and deleted from database."
 
         if r.status_code == 429:
@@ -151,7 +150,7 @@ def send_alert(self, hook_pk, message):
         return "{}: {}".format(r.status_code, r.content.decode(r.encoding))
 
     except Exception as error:
-        c.incr("tasks.send_alert.errors")
+        # c.incr("tasks.send_alert.errors")
         logger.exception(error)
         raise
 
@@ -161,14 +160,14 @@ def send_discord_message(url, message):
     try:
         body = {"content": message}
         r = requests.post(url, json=body, timeout=30)
-        c.incr("tasks.send_discord_message.status_codes.{}".format(r.status_code))
+        # c.incr("tasks.send_discord_message.status_codes.{}".format(r.status_code))
         if not r.ok:
             logger.warning(r.content.decode(r.encoding))
             r.raise_for_status()
         return "{}: {}".format(r.status_code, r.content.decode(r.encoding))
 
     except Exception as error:
-        c.incr("tasks.send_discord_message.errors.")
+        # c.incr("tasks.send_discord_message.errors.")
         logger.exception(error)
         raise
 
@@ -386,7 +385,7 @@ class SmwCentral(object):
 
         logger.info("Download URL: %s", hack.download_url)
         r = requests.get(hack.download_url, verify=False, timeout=30)  # NOSONAR
-        c.incr("tasks.download_rom.status_codes.{}".format(r.status_code))
+        # c.incr("tasks.download_rom.status_codes.{}".format(r.status_code))
         if not r.ok:
             logger.error("Error retrieving rom download archive: %s", r.status_code)
             logger.error(r.content)

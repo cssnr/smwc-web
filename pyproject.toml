@@ -32,7 +32,6 @@ prod = [
   "redis",
   "requests",
   "sentry-sdk",
-  "statsd",
   "watchdog",
 ]
 

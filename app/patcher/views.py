@@ -1,7 +1,6 @@
 import logging
 import os
 
-import statsd
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.http import JsonResponse
@@ -15,7 +14,7 @@ from patcher.patcher import RomPatcher
 from patcher.tasks import cleanup_hack
 
 logger = logging.getLogger("app")
-c = statsd.StatsClient(settings.STATSD_HOST, settings.STATSD_PORT, settings.STATSD_PREFIX)
+# c = statsd.StatsClient(settings.STATSD_HOST, settings.STATSD_PORT, settings.STATSD_PREFIX)
 
 
 @csrf_exempt
@@ -29,7 +28,7 @@ def patcher_view(request):
         if not form.is_valid():
             return JsonResponse({"error": form.errors}, status=400)
 
-        c.incr("patcher.rom_patcher.click")
+        # c.incr("patcher.rom_patcher.click")
         patcher = RomPatcher()
 
         # 2 - SOURCE ROM
@@ -77,7 +76,7 @@ def patcher_view(request):
         logger.debug("fs.url(filename): {}".format(fs.url(filename)))
         cleanup_hack.apply_async((os.path.dirname(fs.path(filename)),), countdown=120)
 
-        c.incr("patcher.rom_patcher.success")
+        # c.incr("patcher.rom_patcher.success")
         return JsonResponse(
             {
                 "location": fs.url(filename),
@@ -88,5 +87,5 @@ def patcher_view(request):
 
     except Exception as error:
         logger.exception(error)
-        c.incr("patcher.rom_patcher.error")
+        # c.incr("patcher.rom_patcher.error")
         return JsonResponse({"error": {"__all__": [str(error)]}}, status=400)

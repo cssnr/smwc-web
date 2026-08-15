@@ -54,9 +54,9 @@ CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND")
 CELERY_TIMEZONE = config("TZ", "America/Los_Angeles")
 
-STATSD_PREFIX = config("STATSD_PREFIX", "smwcweb.dev")
-STATSD_PORT = config("STATSD_PORT", "8125", int)
-STATSD_HOST = config("STATSD_HOST", "localhost")
+# STATSD_PREFIX = config("STATSD_PREFIX", "smwcweb.dev")
+# STATSD_PORT = config("STATSD_PORT", "8125", int)
+# STATSD_HOST = config("STATSD_HOST", "localhost")
 # STATSD_CLIENT = config('STATSD_CLIENT', 'django_statsd')
 
 BITLY_ACCESS_TOKEN = config("BITLY_ACCESS_TOKEN")

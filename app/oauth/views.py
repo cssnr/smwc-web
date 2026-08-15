@@ -5,7 +5,6 @@ import urllib.parse
 from pprint import pformat
 
 import requests
-import statsd
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout
@@ -16,7 +15,7 @@ from home.models import Webhooks
 from home.tasks import send_discord_message
 
 logger = logging.getLogger("app")
-c = statsd.StatsClient(settings.STATSD_HOST, settings.STATSD_PORT, settings.STATSD_PREFIX)
+# c = statsd.StatsClient(settings.STATSD_HOST, settings.STATSD_PORT, settings.STATSD_PREFIX)
 
 
 def do_oauth(request):
